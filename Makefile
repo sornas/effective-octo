@@ -26,9 +26,10 @@ ASSET_FILE = data.fog
 ASSETS = $(shell find res/ -type f -name "*.*")
 SOURCE_FILES = $(shell find src/ -type f -name "*.*")
 
-.PHONY: default run game engine update-engine clean $(ENGINE)
+.PHONY: default run game engine update-engine clean $(ENGINE) all
 
 default: game
+all: clean update-engine run
 game: $(GAME)
 engine: $(ENGINE)
 
