@@ -1,17 +1,17 @@
-GAME_NAME = effective-octo-disco
+GAME = effective-octo-disco
 SOURCE = src/game.c
-FOG_ROOT = fog
+FOG_FOLDER = fog
 
 CC = gcc
 FLAGS = -ggdb -std=c11 -fPIC
-LIBS_FOLDER = lib
+LIB_FOLDER = lib
 
-FOG_LIB =
+ENGINE =
 ifeq ($(shell uname -s),Darwin)
-	FOG_LIB = $(LIBS_FOLDER)/libfog.dylib
+	ENGINE = $(LIB_FOLDER)/libfog.dylib
 endif
 ifeq ($(shell uname -s),Linux)
-	FOG_LIB = $(LIBS_FOLDER)/libfog.a
+	ENGINE = $(LIB_FOLDER)/libfog.a
 endif
 # Would be nice to remove some of these...
 LIBS = -lfog -lSDL2 -lSDL2main -ldl -lpthread -lc -lm
@@ -20,39 +20,43 @@ ifeq ($(shell uname -s),Darwin)
     endif
 INCLUDES = -Iinc
 
-ASSET_BUILDER = $(FOG_ROOT)/out/mist
+ASSET_BUILDER = $(FOG_FOLDER)/out/mist
 ASSET_FILE = data.fog
 ASSETS = $(shell find res/ -type f -name "*.*")
 SOURCE_FILES = $(shell find src/ -type f -name "*.*")
 
-.PHONY: default run game
+.PHONY: default run game engine update-engine clean
 
 default: game
-game: $(ASSET_FILE) $(GAME_NAME)
+game: $(GAME)
+engine: $(ENGINE)
 
-run: game
-	./$(GAME_NAME)
+run: $(GAME)
+	./$<
 
 $(ASSET_FILE): $(ASSETS) $(ASSET_BUILDER)
 	$(ASSET_BUILDER) -o $@ $(ASSETS)
 
-$(GAME_NAME): $(SOURCE_FILES) $(FOG_LIB)
-	$(CC) $(FLAGS) -o $@ $(SOURCE) -L$(LIBS_FOLDER) $(LIBS) $(INCLUDES)
+$(GAME): $(ENGINE) $(ASSET_FILE) $(SOURCE_FILES)
+	$(CC) $(FLAGS) -o $@ $(SOURCE) -L$(LIB_FOLDER) $(LIBS) $(INCLUDES)
 
-$(ASSET_BUILDER): $(FOG_LIB)
+$(ASSET_BUILDER): $(ENGINE)
 
-$(LIBS_FOLDER):
+$(LIB_FOLDER):
 	mkdir -p $@
 
-$(FOG_LIB): | $(LIBS_FOLDER)
-	make -C $(FOG_ROOT)
-	cp $(FOG_ROOT)/out/libfog.* $(LIBS_FOLDER)/
+update-engine:
+	git submodule update --remote
+
+$(ENGINE): | $(LIB_FOLDER)
+	make -C $(FOG_FOLDER)
+	cp $(FOG_FOLDER)/out/libfog.* $(LIB_FOLDER)/
 	mkdir -p inc
-	cp $(FOG_ROOT)/out/fog.h inc/
+	cp $(FOG_FOLDER)/out/fog.h inc/
 
 clean:
-	make -C $(FOG_ROOT) clean
-	rm -rf $(LIBS_FOLDER)
-	rm -f $(GAME_NAME)
+	make -C $(FOG_FOLDER) clean
+	rm -rf $(LIB_FOLDER)
+	rm -f $(GAME)
 	rm -f $(ASSET_FILE)
 
