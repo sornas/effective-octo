@@ -69,4 +69,5 @@ clean:
 	rm -rf $(LIB_FOLDER)
 	rm -f $(GAME)
 	rm -f $(ASSET_FILE)
+	rm -f *.o
 
