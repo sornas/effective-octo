@@ -4,7 +4,7 @@ FOG_FOLDER = fog
 
 CC = gcc
 WARNINGS = -Werror -Wall
-FLAGS = $(WARNINGS) -ggdb -std=c11 -fPIC
+FLAGS = $(WARNINGS) -ggdb -std=c11
 LIB_FOLDER = lib
 
 ENGINE =
@@ -24,13 +24,15 @@ INCLUDES = -Iinc
 ASSET_BUILDER = $(FOG_FOLDER)/out/mist
 ASSET_FILE = data.fog
 ASSETS = $(shell find res/ -type f -name "*.*")
-SOURCE_FILES = $(shell find src/ -type f -name "*.*")
+HEADERS = $(shell find src/ -type f -name "*.h")
+SRCS = $(shell find src/ -type f -name "*.c")
+OBJS = $(SRCS:src/%.c=%.o)
 
 .PHONY: default run game engine update-engine clean $(ENGINE) all
 
 default: game
 all: clean update-engine run
-game: $(GAME)
+game: $(GAME) $(ASSET_FILE)
 engine: $(ENGINE)
 
 run: $(GAME)
@@ -39,8 +41,14 @@ run: $(GAME)
 $(ASSET_FILE): $(ASSETS) $(ASSET_BUILDER)
 	$(ASSET_BUILDER) -o $@ $(ASSETS)
 
-$(GAME): $(ENGINE) $(ASSET_FILE) $(SOURCE_FILES)
-	$(CC) $(FLAGS) -o $@ $(SOURCE) -L$(LIB_FOLDER) $(LIBS) $(INCLUDES)
+# $(GAME): $(ENGINE) $(SRCS) $(HEADERS)
+# 	$(CC) $(FLAGS) -o $@ $(SOURCE) -L$(LIB_FOLDER) $(LIBS) $(INCLUDES)
+
+$(GAME): $(ENGINE) $(OBJS)
+	$(CC) $(FLAGS) $(OBJS) -o $@ -L$(LIB_FOLDER) $(LIBS)
+
+%.o: src/%.c $(HEADERS)
+	$(CC) $(FLAGS) -c $< -o $@ $(INCLUDES)
 
 $(ASSET_BUILDER): $(ENGINE)
 
