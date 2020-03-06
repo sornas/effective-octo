@@ -3,7 +3,8 @@ SOURCE = src/game.c
 FOG_FOLDER = fog
 
 CC = gcc
-FLAGS = -ggdb -std=c11 -fPIC
+WARNINGS = -Werror -Wall
+FLAGS = $(WARNINGS) -ggdb -std=c11 -fPIC
 LIB_FOLDER = lib
 
 ENGINE =
@@ -25,7 +26,7 @@ ASSET_FILE = data.fog
 ASSETS = $(shell find res/ -type f -name "*.*")
 SOURCE_FILES = $(shell find src/ -type f -name "*.*")
 
-.PHONY: default run game engine update-engine clean
+.PHONY: default run game engine update-engine clean $(ENGINE)
 
 default: game
 game: $(GAME)
@@ -46,13 +47,13 @@ $(LIB_FOLDER):
 	mkdir -p $@
 
 update-engine:
-	git submodule update --remote
+	@git submodule update --remote
 
 $(ENGINE): | $(LIB_FOLDER)
-	make -C $(FOG_FOLDER)
-	cp $(FOG_FOLDER)/out/libfog.* $(LIB_FOLDER)/
-	mkdir -p inc
-	cp $(FOG_FOLDER)/out/fog.h inc/
+	make -C $(FOG_FOLDER) engine
+	@cp $(FOG_FOLDER)/out/libfog.* $(LIB_FOLDER)/
+	@mkdir -p inc
+	@cp $(FOG_FOLDER)/out/fog.h inc/
 
 clean:
 	make -C $(FOG_FOLDER) clean
