@@ -3,5 +3,6 @@ data.fog
 inc/
 lib/
 *.o
+tags
 
 effective-octo-disco

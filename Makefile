@@ -30,16 +30,17 @@ OBJS = $(SRCS:src/%.c=%.o)
 
 .PHONY: default run game engine update-engine clean $(ENGINE) all
 
-default: game
 all: clean update-engine run
+default: game
 game: $(GAME) $(ASSET_FILE)
 engine: $(ENGINE)
 
-run: $(GAME)
-	./$<
+run: game
+	./$(GAME)
 
 $(ASSET_FILE): $(ASSETS) $(ASSET_BUILDER)
-	$(ASSET_BUILDER) -o $@ $(ASSETS)
+	@echo "Building assets!"
+	@$(ASSET_BUILDER) -o $@ $(ASSETS)
 
 # $(GAME): $(ENGINE) $(SRCS) $(HEADERS)
 # 	$(CC) $(FLAGS) -o $@ $(SOURCE) -L$(LIB_FOLDER) $(LIBS) $(INCLUDES)
@@ -59,12 +60,14 @@ update-engine:
 	@git submodule update --remote
 
 $(ENGINE): | $(LIB_FOLDER)
+	@echo "Compiling engine!"
 	make -C $(FOG_FOLDER) engine
 	@cp $(FOG_FOLDER)/out/libfog.* $(LIB_FOLDER)/
 	@mkdir -p inc
 	@cp $(FOG_FOLDER)/out/fog.h inc/
 
 clean:
+	@echo "Cleaning!"
 	make -C $(FOG_FOLDER) clean
 	rm -rf $(LIB_FOLDER)
 	rm -f $(GAME)
