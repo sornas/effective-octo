@@ -1,0 +1,6 @@
+data.fog
+*.dSYM/
+inc/
+lib/
+
+effective-octo-disco
