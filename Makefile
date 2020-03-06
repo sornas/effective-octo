@@ -14,7 +14,10 @@ ifeq ($(shell uname -s),Linux)
 	FOG_LIB = $(LIBS_FOLDER)/libfog.a
 endif
 # Would be nice to remove some of these...
-LIBS = -lfog -lSDL2 -lSDL2main -ldl -lpthread -lc -lm# -lc++
+LIBS = -lfog -lSDL2 -lSDL2main -ldl -lpthread -lc -lm
+ifeq ($(shell uname -s),Darwin)
+	LIBS += -lc++
+    endif
 INCLUDES = -Iinc
 
 ASSET_BUILDER = $(FOG_ROOT)/out/mist
