@@ -5,10 +5,13 @@
 
 #include "game.h"
 #include "car.h"
+#include "level.h"
 
 u32 num_bodies = 4;
 Body *bodies;
 Car car;
+
+LevelPointList level;
 
 void update() {
     update_car(&car, fog_logic_delta());
@@ -16,9 +19,12 @@ void update() {
 
 void draw() {
     draw_car(&car);
-    for (u32 i = 0; i < num_bodies; i++) {
-        fog_physics_debug_draw_body(&bodies[i]);
-    }
+    // for (u32 i = 0; i < num_bodies; i++) {
+    //     fog_physics_debug_draw_body(&bodies[i]);
+    // }
+    level = generate_level_point_list();
+    draw_level_point_list(&level);
+    clear_level_point_list(&level);
 }
 
 int main(int argc, char **argv) {
@@ -37,13 +43,14 @@ int main(int argc, char **argv) {
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
     car = create_car(P1);
     //body = fog_physics_create_body(car_shape, 0);
-
     bodies = malloc(sizeof(Body) * num_bodies);
     for (u32 i = 0; i < num_bodies; i++) {
         bodies[i] = fog_physics_create_body(car_shape, 0);
         bodies[i].position = fog_random_unit_vec2();
         bodies[i].scale = fog_random_unit_vec2();
     }
+
+    fog_renderer_fetch_camera(0)->zoom = 1.0 / 5.0;
 
     fog_run(update, draw);
 
