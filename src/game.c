@@ -22,7 +22,20 @@ void draw() {
     // for (u32 i = 0; i < num_bodies; i++) {
     //     fog_physics_debug_draw_body(&bodies[i]);
     // }
-    level = generate_level_point_list();
+    static f32 noise = 2.0;
+    static f32 offset = 0.2;
+    static f32 smoothness = 3.0;
+    fog_util_tweak_f32("Noise", &noise, 0.1);
+    fog_util_tweak_f32("Offset", &offset, 0.1);
+    fog_util_tweak_f32("Smoothness", &smoothness, 0.1);
+    b8 gen_new_track = false;
+    if (fog_util_tweak_b8("Gen new", &gen_new_track)) {
+        noise = 0.2 + fog_random_real(0.0) * 5;
+        offset = -5 + fog_random_real(0.0) * 10;
+    }
+
+
+    level = generate_level_point_list(noise, offset, smoothness);
     draw_level_point_list(&level);
     clear_level_point_list(&level);
 }
