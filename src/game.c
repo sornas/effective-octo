@@ -6,7 +6,7 @@
 #include "game.h"
 #include "car.h"
 
-u32 num_bodies = 4;
+u32 num_bodies = 0;
 Body *bodies;
 Car car;
 
@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     fog_input_add(fog_key_to_input_code(SDLK_d), NAME(RIGHT), P1);
     fog_input_add(fog_key_to_input_code(SDLK_w), NAME(FORWARD), P1);
     fog_input_add(fog_key_to_input_code(SDLK_s), NAME(BACKWARD), P1);
+    fog_input_add(fog_key_to_input_code(SDLK_SPACE), NAME(BRAKE), P1);
 
     car_sprite = fog_asset_fetch_id("CAR_SPRITE");
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
