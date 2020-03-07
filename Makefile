@@ -30,8 +30,8 @@ OBJS = $(SRCS:src/%.c=%.o)
 
 .PHONY: default run game engine update-engine clean $(ENGINE) all
 
-all: clean update-engine run
 default: game
+all: clean update-engine run
 game: $(GAME) $(ASSET_FILE)
 engine: $(ENGINE)
 
