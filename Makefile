@@ -28,12 +28,16 @@ HEADERS = $(shell find src/ -type f -name "*.h")
 SRCS = $(shell find src/ -type f -name "*.c")
 OBJS = $(SRCS:src/%.c=%.o)
 
-.PHONY: default run game engine update-engine clean $(ENGINE) all
+.PHONY: default run game engine info update-engine clean $(ENGINE) all
 
 default: game
 all: clean update-engine run
 game: $(GAME) $(ASSET_FILE)
 engine: $(ENGINE)
+
+info:
+	$(info $(SRCS))
+	$(info $(OBJS))
 
 run: game
 	./$(GAME)
