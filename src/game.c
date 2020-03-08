@@ -36,7 +36,9 @@ void draw() {
 
 
     level = generate_level_point_list(noise, offset, smoothness);
-    draw_level_point_list(&level);
+    // draw_level_point_list(&level);
+    LevelEdges edge = expand_to_edges(&level);
+    draw_level_edge(&edge);
     clear_level_point_list(&level);
 }
 
