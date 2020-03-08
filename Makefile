@@ -26,9 +26,9 @@ INCLUDES = -Iinc
 
 ASSET_BUILDER = $(FOG_FOLDER)/out/mist
 ASSET_FILE = data.fog
-ASSETS = $(shell find res/ -type f -name "*.*")
-HEADERS = $(shell find src/ -type f -name "*.h")
-SRCS = $(shell find src/ -type f -name "*.c")
+ASSETS = $(shell find res -type f -name "*.*")
+HEADERS = $(shell find src -type f -name "*.h")
+SRCS = $(shell find src -type f -name "*.c")
 OBJS = $(SRCS:src/%.c=%.o)
 
 .PHONY: default run game engine update-engine clean $(ENGINE) all debug
