@@ -4,21 +4,24 @@ FOG_FOLDER = fog
 
 CC = gcc
 WARNINGS = -Werror -Wall
-FLAGS = $(WARNINGS) -ggdb -std=c11
+FLAGS = $(WARNINGS) -std=c11
+DEBUG_FLAGS = $(FLAGS) -ggdb -O0
 LIB_FOLDER = lib
+ARCH = $(shell uname -s)
 
 ENGINE =
-ifeq ($(shell uname -s),Darwin)
+ifeq ($(ARCH),Darwin)
 	ENGINE = $(LIB_FOLDER)/libfog.dylib
 endif
-ifeq ($(shell uname -s),Linux)
+ifeq ($(ARCH),Linux)
 	ENGINE = $(LIB_FOLDER)/libfog.a
 endif
+
 # Would be nice to remove some of these...
 LIBS = -lfog -lSDL2 -lSDL2main -ldl -lpthread -lc -lm
-ifeq ($(shell uname -s),Darwin)
+ifeq ($(ARCH),Darwin)
 	LIBS += -lc++
-    endif
+endif
 INCLUDES = -Iinc
 
 ASSET_BUILDER = $(FOG_FOLDER)/out/mist
@@ -28,12 +31,15 @@ HEADERS = $(shell find src/ -type f -name "*.h")
 SRCS = $(shell find src/ -type f -name "*.c")
 OBJS = $(SRCS:src/%.c=%.o)
 
-.PHONY: default run game engine update-engine clean $(ENGINE) all
+.PHONY: default run game engine update-engine clean $(ENGINE) all debug
 
 default: game
 all: clean update-engine run
-game: $(GAME) $(ASSET_FILE)
+game: $(GAME)
 engine: $(ENGINE)
+
+debug: game
+	gdb $(GAME)
 
 run: game
 	./$(GAME)
@@ -42,19 +48,17 @@ $(ASSET_FILE): $(ASSETS) $(ASSET_BUILDER)
 	@echo "Building assets!"
 	@$(ASSET_BUILDER) -o $@ $(ASSETS)
 
-# $(GAME): $(ENGINE) $(SRCS) $(HEADERS)
-# 	$(CC) $(FLAGS) -o $@ $(SOURCE) -L$(LIB_FOLDER) $(LIBS) $(INCLUDES)
-
-$(GAME): $(ENGINE) $(OBJS)
-	$(CC) $(FLAGS) $(OBJS) -o $@ -L$(LIB_FOLDER) $(LIBS)
+$(GAME): $(ENGINE) $(OBJS) $(ASSET_FILE)
+	@echo "Compiling game!"
+	$(CC) $(DEBUG_FLAGS) $(OBJS) -o $@ -L$(LIB_FOLDER) $(LIBS)
 
 %.o: src/%.c $(HEADERS)
-	$(CC) $(FLAGS) -c $< -o $@ $(INCLUDES)
+	$(CC) $(DEBUG_FLAGS) -c $< -o $@ $(INCLUDES)
 
 $(ASSET_BUILDER): $(ENGINE)
 
 $(LIB_FOLDER):
-	mkdir -p $@
+	@mkdir -p $@
 
 update-engine:
 	@git submodule update --remote
