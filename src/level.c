@@ -68,10 +68,12 @@ static Vec2 sample_from_smoothness(Vec2 p1, Vec2 p2, Vec2 d1, Vec2 d2,
 // Spam points
 // Filter the empty ones
 LevelEdges expand_to_edges(LevelPointList *list) {
-    static f32 width = 0.5;
+    static f32 width = 1.0;
     fog_util_tweak_f32("Width", &width, 0.1);
     static f32 spacing = 0.2;
     fog_util_tweak_f32("Spacing", &spacing, 0.01);
+    static f32 border_width = 0.3;
+    fog_util_tweak_f32("Border width", &border_width, 0.1);
     if (spacing < 0.01) {
         spacing = 0.01;
     }
@@ -83,7 +85,8 @@ LevelEdges expand_to_edges(LevelPointList *list) {
     u32 maximum_num_points = list->num_points * (1.0 / spacing) * 4;
     LevelEdges edge = {
         .width = width,
-        .num_checkpoints = 0,
+        .num_checkpoints = list->num_points,
+        .checkpoints = malloc(list->num_points * sizeof(Vec2)),
         .num_track_points = 0,
         .points = malloc(maximum_num_points * sizeof(Vec2)),
         .num_right_edges = 0,
@@ -91,6 +94,10 @@ LevelEdges expand_to_edges(LevelPointList *list) {
         .num_left_edges = 0,
         .left_edges = malloc(maximum_num_points * sizeof(Vec2)),
     };
+
+    for (u32 i = 0; i < list->num_points; i++) {
+        edge.checkpoints[i] = list->points[i];
+    }
 
     for (u32 i = 0; i < list->num_points; i++) {
         Vec2 p1 = list->points[i];
@@ -124,25 +131,27 @@ LevelEdges expand_to_edges(LevelPointList *list) {
 
         u32 removed_right = 0;
         for (u32 j = 0; j < edge.num_right_edges; j++) {
-            Vec2 a = edge.right_edges[j];
+            Vec2 e = edge.right_edges[j];
+            Vec2 a = fog_V2(e.x, e.y);
             if (fog_distance_v2(p, a) < edge.width - 0.01) {
                 removed_right++;
                 continue;
             }
             assert(removed_right <= j);
-            edge.right_edges[j - removed_right] = a;
+            edge.right_edges[j - removed_right] = e;
         }
         edge.num_right_edges -= removed_right;
 
         u32 removed_left = 0;
         for (u32 j = 0; j < edge.num_left_edges; j++) {
-            Vec2 a = edge.left_edges[j];
+            Vec2 e = edge.left_edges[j];
+            Vec2 a = fog_V2(e.x, e.y);
             if (fog_distance_v2(p, a) < edge.width - 0.01) {
                 removed_left++;
                 continue;
             }
             assert(removed_left <= j);
-            edge.left_edges[j - removed_left] = a;
+            edge.left_edges[j - removed_left] = e;
         }
         edge.num_left_edges -= removed_left;
     }
@@ -179,6 +188,8 @@ void draw_level_edge(LevelEdges *edge) {
 void clear_level_edge(LevelEdges *edge) {
     edge->num_checkpoints = 0;
     edge->num_track_points = 0;
+    edge->num_right_edges = 0;
+    edge->num_left_edges = 0;
     if (edge->checkpoints) {
         free(edge->checkpoints);
     }
@@ -225,3 +236,68 @@ void draw_level_point_list(LevelPointList *list) {
 
     }
 }
+
+Level expand_to_level(LevelEdges *edge, ShapeID shape) {
+    u32 max_num_bodies = edge->num_right_edges + edge->num_left_edges;
+    Body *bodies = malloc(max_num_bodies * sizeof(Body));
+
+    u32 num_bodies = 0;
+    for (u32 i = 0; i < edge->num_left_edges; i++) {
+        u32 j = (i + 1) % edge->num_left_edges;
+        Vec2 a = edge->left_edges[i];
+        Vec2 b = edge->left_edges[j];
+        Body body = fog_physics_create_body(shape, 0);
+        body.position = fog_mul_v2(fog_add_v2(a, b), 0.5);
+        // TODO(ed): This minus sign shouldn't be here. The engine is
+        // wrong, and it's the body rotation that is wrong.
+        body.rotation = fog_angle_v2(fog_sub_v2(b, a));
+        body.scale.y = 0.5; // Boarder width
+        body.scale.x = fog_distance_v2(a, b);
+        assert(num_bodies < max_num_bodies);
+        bodies[num_bodies++] = body;
+    }
+
+    for (u32 i = 0; i < edge->num_right_edges; i++) {
+        u32 j = (i + 1) % edge->num_right_edges;
+        Vec2 a = edge->right_edges[i];
+        Vec2 b = edge->right_edges[j];
+        Body body = fog_physics_create_body(shape, 0);
+        body.position = fog_mul_v2(fog_add_v2(a, b), 0.5);
+        // TODO(ed): This minus sign shouldn't be here. The engine is
+        // wrong, and it's the body rotation that is wrong.
+        body.rotation = fog_angle_v2(fog_sub_v2(b, a));
+        body.scale.y = 0.5; // Boarder width
+        body.scale.x = fog_distance_v2(a, b);
+        assert(num_bodies < max_num_bodies);
+        bodies[num_bodies++] = body;
+    }
+
+    Level level = {
+        .num_checkpoints = edge->num_checkpoints,
+        .checkpoints = malloc(edge->num_checkpoints * sizeof(Body)),
+
+        .num_bodies = num_bodies,
+        .bodies = bodies,
+    };
+
+    for (u32 i = 0; i < edge->num_checkpoints; i++) {
+        level.checkpoints[i] = edge->checkpoints[i];
+    }
+
+    return level;
+}
+
+void draw_level(Level *level) {
+    for (u32 i = 0; i < level->num_bodies; i++) {
+        fog_physics_debug_draw_body(level->bodies + i);
+    }
+
+    for (u32 i = 0; i < level->num_checkpoints; i++) {
+        fog_renderer_push_point(0, level->checkpoints[i], fog_V4(0, 1, 0, 1), 0.2);
+    }
+}
+
+void clear_level(Level *level) {
+    free(level->bodies);
+}
+

@@ -11,7 +11,10 @@ u32 num_bodies = 4;
 Body *bodies;
 Car car;
 
-LevelPointList level;
+LevelPointList point_list;
+LevelEdges edge;
+Level level;
+ShapeID square;
 
 void update() {
     update_car(&car, fog_logic_delta());
@@ -25,21 +28,31 @@ void draw() {
     static f32 noise = 2.0;
     static f32 offset = 0.2;
     static f32 smoothness = 3.0;
-    fog_util_tweak_f32("Noise", &noise, 0.1);
-    fog_util_tweak_f32("Offset", &offset, 0.1);
-    fog_util_tweak_f32("Smoothness", &smoothness, 0.1);
-    b8 gen_new_track = false;
-    if (fog_util_tweak_b8("Gen new", &gen_new_track)) {
+    bool change = false;
+    change |= fog_util_tweak_f32("Noise", &noise, 0.1);
+    change |= fog_util_tweak_f32("Offset", &offset, 0.1);
+    change |= fog_util_tweak_f32("Smoothness", &smoothness, 0.1);
+    static b8 gen_new_track = true;
+    fog_util_tweak_b8("Gen new", &gen_new_track);
+    if (gen_new_track) {
         noise = 0.2 + fog_random_real(0.0) * 5;
         offset = -5 + fog_random_real(0.0) * 10;
+        change = true;
+        gen_new_track = false;
     }
 
+    if (change) {
+        clear_level_point_list(&point_list);
+        point_list = generate_level_point_list(noise, offset, smoothness);
+        clear_level_edge(&edge);
+        edge = expand_to_edges(&point_list);
+    }
+    clear_level(&level);
+    level = expand_to_level(&edge, square);
 
-    level = generate_level_point_list(noise, offset, smoothness);
-    // draw_level_point_list(&level);
-    LevelEdges edge = expand_to_edges(&level);
+    // draw_level_point_list(&point_list);
     draw_level_edge(&edge);
-    clear_level_point_list(&level);
+    draw_level(&level);
 }
 
 int main(int argc, char **argv) {
@@ -56,6 +69,7 @@ int main(int argc, char **argv) {
 
     car_sprite = fog_asset_fetch_id("CAR_SPRITE");
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
+    square = car_shape;
     car = create_car(P1);
     //body = fog_physics_create_body(car_shape, 0);
     bodies = malloc(sizeof(Body) * num_bodies);
