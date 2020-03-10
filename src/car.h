@@ -6,6 +6,11 @@ AssetID car_sprite;
 typedef struct {
     Player player;
     Body body;
+
+    f32 acceleration;
+    f32 wheel_rotation_speed;
+
+    f32 air_resistance;
 } Car;
 
 ///
