@@ -14,6 +14,7 @@ Car create_car(Player player) {
     return car;
 }
 
+// Rotate a body and its vectors in-place.
 void rotate_body(Body *body, f32 angle) {
     body->rotation += angle;
     body->velocity = fog_rotate_v2(body->velocity, angle);
@@ -22,8 +23,8 @@ void rotate_body(Body *body, f32 angle) {
 }
 
 void update_car(Car *car, f32 delta) {
-
-    s32 reversing = fog_rotate_v2(car->body.velocity, -car->body.rotation).y < 0 ? -1 : 1;
+    // turn
+    s32 reversing = fog_rotate_v2(car->body.velocity, -car->body.rotation).y < 0 ? -1 : 1;  // turn other way if reversing
 
     if (fog_input_down(NAME(LEFT), car->player)) {
         rotate_body(&car->body, car->wheel_rotation * reversing * delta * fog_length_v2(car->body.velocity));
@@ -32,6 +33,7 @@ void update_car(Car *car, f32 delta) {
         rotate_body(&car->body, -car->wheel_rotation * reversing * delta * fog_length_v2(car->body.velocity));
     }
 
+    // accelerate / decelerate
     if (fog_input_down(NAME(FORWARD), car->player)) {
         car->body.acceleration = fog_rotate_v2(fog_V2(0, car->acceleration), car->body.rotation);
     } else if (fog_input_down(NAME(BACKWARD), car->player)) {
@@ -40,6 +42,7 @@ void update_car(Car *car, f32 delta) {
         car->body.acceleration = fog_V2(0, 0);
     }
 
+    // air resistance, slows down and sets a maximum velocity
     car->body.acceleration = fog_add_v2(car->body.acceleration,
                                         fog_mul_v2(car->body.velocity, -car->air_resistance));
 
@@ -52,7 +55,7 @@ void update_car(Car *car, f32 delta) {
     
     car_debug_vec(car->body.velocity, fog_V4(1, 0, 0, 1));
     car_debug_vec(car->body.acceleration, fog_V4(0, 1, 0, 1));
-    car_debug_vec(fog_rotate_v2(car->body.velocity, -car->body.rotation), fog_V4(1, 0, 1, 1));
+    car_debug_vec(fog_rotate_v2(car->body.velocity, -car->body.rotation), fog_V4(1, 0, 1, 1));  // (x is always 0)
 }
 
 void draw_car(Car *car) {
