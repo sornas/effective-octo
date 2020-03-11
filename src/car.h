@@ -8,7 +8,7 @@ typedef struct {
     Body body;
 
     f32 acceleration;
-    f32 wheel_rotation_speed;
+    f32 wheel_rotation;
 
     f32 air_resistance;
 } Car;

@@ -6,7 +6,7 @@ Car create_car(Player player) {
         .body = fog_physics_create_body(car_shape, 1.0),
 
         .acceleration = 2,
-        .wheel_rotation_speed = 2,
+        .wheel_rotation = 3,
 
         .air_resistance = 1,
     };
@@ -26,10 +26,10 @@ void update_car(Car *car, f32 delta) {
     s32 reversing = fog_rotate_v2(car->body.velocity, -car->body.rotation).y < 0 ? -1 : 1;
 
     if (fog_input_down(NAME(LEFT), car->player)) {
-        rotate_body(&car->body, car->wheel_rotation_speed * reversing * delta);
+        rotate_body(&car->body, car->wheel_rotation * reversing * delta * fog_length_v2(car->body.velocity));
     }
     if (fog_input_down(NAME(RIGHT), car->player)) {
-        rotate_body(&car->body, -car->wheel_rotation_speed * reversing * delta);
+        rotate_body(&car->body, -car->wheel_rotation * reversing * delta * fog_length_v2(car->body.velocity));
     }
 
     if (fog_input_down(NAME(FORWARD), car->player)) {
