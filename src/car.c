@@ -22,11 +22,14 @@ void rotate_body(Body *body, f32 angle) {
 }
 
 void update_car(Car *car, f32 delta) {
+
+    s32 reversing = fog_rotate_v2(car->body.velocity, -car->body.rotation).y < 0 ? -1 : 1;
+
     if (fog_input_down(NAME(LEFT), car->player)) {
-        rotate_body(&car->body, car->wheel_rotation_speed * delta);
+        rotate_body(&car->body, car->wheel_rotation_speed * reversing * delta);
     }
     if (fog_input_down(NAME(RIGHT), car->player)) {
-        rotate_body(&car->body, -car->wheel_rotation_speed * delta);
+        rotate_body(&car->body, -car->wheel_rotation_speed * reversing * delta);
     }
 
     if (fog_input_down(NAME(FORWARD), car->player)) {
@@ -44,6 +47,12 @@ void update_car(Car *car, f32 delta) {
     for (u32 i = 0; i < num_bodies; i++) {
         fog_physics_solve(fog_physics_check_overlap(&car->body, &bodies[i]));
     }
+
+    #define car_debug_vec(v, c) fog_renderer_push_line(1, car->body.position, fog_add_v2(car->body.position, v), c, 0.01)
+    
+    car_debug_vec(car->body.velocity, fog_V4(1, 0, 0, 1));
+    car_debug_vec(car->body.acceleration, fog_V4(0, 1, 0, 1));
+    car_debug_vec(fog_rotate_v2(car->body.velocity, -car->body.rotation), fog_V4(1, 0, 1, 1));
 }
 
 void draw_car(Car *car) {
