@@ -83,7 +83,7 @@ void update_car(Car *car, f32 delta) {
         fog_physics_solve(fog_physics_check_overlap(&car->body, &bodies[i]));
     }
 
-    fog_renderer_fetch_camera(0)->position = car->body.position;
+    fog_renderer_fetch_camera(0)->position = fog_add_v2(car->body.position, fog_mul_v2(car->body.velocity, 0.01));
 
     #define car_debug_vec(v, c) fog_renderer_push_line(1, car->body.position, fog_add_v2(car->body.position, v), c, 0.01)
     
