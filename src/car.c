@@ -4,7 +4,7 @@ Car create_car(Player player) {
     Car car = {
         .player = player,
         .body = fog_physics_create_body(car_shape, 1.0, 0.1, 0.1),
-        
+
         .reversing = 1,
 
         .acceleration = 5,
@@ -71,7 +71,7 @@ void update_car(Car *car, f32 delta) {
     } else {
         car->wheel_rotation_current = 0;
     }
-    
+
     if (fog_input_down(NAME(DRIFT), car->player)) {
         update_car_drift(car, delta);
     } else {
