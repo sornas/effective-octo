@@ -3,7 +3,7 @@
 Car create_car(Player player) {
     Car car = {
         .player = player,
-        .body = fog_physics_create_body(car_shape, 1.0),
+        .body = fog_physics_create_body(car_shape, 1.0, 0.1, 0.1),
 
         .acceleration = 5,
         .wheel_rotation_max = 3,
@@ -53,9 +53,9 @@ void update_car(Car *car, f32 delta) {
 
     #define car_debug_vec(v, c) fog_renderer_push_line(1, car->body.position, fog_add_v2(car->body.position, v), c, 0.01)
     
-    car_debug_vec(car->body.velocity, fog_V4(1, 0, 0, 1));
-    car_debug_vec(car->body.acceleration, fog_V4(0, 1, 0, 1));
-    car_debug_vec(fog_rotate_v2(car->body.velocity, -car->body.rotation), fog_V4(1, 0, 1, 1));  // (x is always 0)
+    //car_debug_vec(car->body.velocity, fog_V4(1, 0, 0, 1));
+    //car_debug_vec(car->body.acceleration, fog_V4(0, 1, 0, 1));
+    //car_debug_vec(fog_rotate_v2(car->body.velocity, -car->body.rotation), fog_V4(1, 0, 1, 1));  // (x is always 0)
 
     fog_util_tweak_f32("max velocity", &car->max_velocity, 1);
     fog_util_tweak_f32_r("velocity length", reversing * fog_length_v2(car->body.velocity));

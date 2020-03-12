@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 
     bodies = malloc(sizeof(Body) * num_bodies);
     for (u32 i = 0; i < num_bodies; i++) {
-        bodies[i] = fog_physics_create_body(car_shape, 0);
+        bodies[i] = fog_physics_create_body(car_shape, 0, 0.1, 0.1);
         bodies[i].position = fog_random_unit_vec2();
         bodies[i].scale = fog_random_unit_vec2();
     }
