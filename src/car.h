@@ -12,7 +12,7 @@ typedef struct {
     f32 wheel_rotation_current;
 
     f32 max_velocity;
-    f32 drag;
+    f32 brake_air;
 } Car;
 
 ///

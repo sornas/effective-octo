@@ -10,7 +10,7 @@ Car create_car(Player player) {
         .wheel_rotation_current = 0,
 
         .max_velocity = 2,
-        .drag = 1,
+        .brake_air = 3,
     };
     car.body.scale = fog_V2(0.1, 0.1);
     return car;
@@ -37,17 +37,14 @@ void update_car(Car *car, f32 delta) {
 
     // accelerate / decelerate
     if (fog_input_down(NAME(FORWARD), car->player)) {
-        car->body.acceleration = fog_rotate_v2(fog_V2(0, car->acceleration), car->body.rotation);
+        car->body.acceleration = fog_sub_v2(fog_rotate_v2(fog_V2(0, car->acceleration), car->body.rotation),
+                                            fog_mul_v2(car->body.velocity, car->acceleration / car->max_velocity));
     } else if (fog_input_down(NAME(BACKWARD), car->player)) {
-        car->body.acceleration = fog_rotate_v2(fog_V2(0, -car->acceleration), car->body.rotation);
+        car->body.acceleration = fog_sub_v2(fog_rotate_v2(fog_V2(0, -car->acceleration), car->body.rotation),
+                                            fog_mul_v2(car->body.velocity, car->acceleration / car->max_velocity));
     } else {
-        car->body.acceleration = fog_V2(0, 0);
+        car->body.acceleration = fog_mul_v2(car->body.velocity, -car->brake_air);
     }
-
-    // max velocity, not really correct in a physics-sense but more useful for us
-    car->body.acceleration = fog_sub_v2(car->body.acceleration,
-                                        fog_mul_v2(car->body.velocity,
-                                                   car->acceleration / car->max_velocity));
 
     fog_physics_integrate(&car->body, delta);
     for (u32 i = 0; i < num_bodies; i++) {
