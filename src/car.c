@@ -5,10 +5,12 @@ Car create_car(Player player) {
         .player = player,
         .body = fog_physics_create_body(car_shape, 1.0),
 
-        .acceleration = 2,
-        .wheel_rotation = 3,
+        .acceleration = 5,
+        .wheel_rotation_max = 3,
+        .wheel_rotation_current = 0,
 
-        .air_resistance = 1,
+        .max_velocity = 2,
+        .drag = 1,
     };
     car.body.scale = fog_V2(0.1, 0.1);
     return car;
@@ -27,10 +29,10 @@ void update_car(Car *car, f32 delta) {
     s32 reversing = fog_rotate_v2(car->body.velocity, -car->body.rotation).y < 0 ? -1 : 1;  // turn other way if reversing
 
     if (fog_input_down(NAME(LEFT), car->player)) {
-        rotate_body(&car->body, car->wheel_rotation * reversing * delta * fog_length_v2(car->body.velocity));
+        rotate_body(&car->body, car->wheel_rotation_max * reversing * delta * fog_length_v2(car->body.velocity));
     }
     if (fog_input_down(NAME(RIGHT), car->player)) {
-        rotate_body(&car->body, -car->wheel_rotation * reversing * delta * fog_length_v2(car->body.velocity));
+        rotate_body(&car->body, -car->wheel_rotation_max * reversing * delta * fog_length_v2(car->body.velocity));
     }
 
     // accelerate / decelerate
@@ -42,9 +44,10 @@ void update_car(Car *car, f32 delta) {
         car->body.acceleration = fog_V2(0, 0);
     }
 
-    // air resistance, slows down and sets a maximum velocity
-    car->body.acceleration = fog_add_v2(car->body.acceleration,
-                                        fog_mul_v2(car->body.velocity, -car->air_resistance));
+    // max velocity, not really correct in a physics-sense but more useful for us
+    car->body.acceleration = fog_sub_v2(car->body.acceleration,
+                                        fog_mul_v2(car->body.velocity,
+                                                   car->acceleration / car->max_velocity));
 
     fog_physics_integrate(&car->body, delta);
     for (u32 i = 0; i < num_bodies; i++) {
@@ -56,6 +59,9 @@ void update_car(Car *car, f32 delta) {
     car_debug_vec(car->body.velocity, fog_V4(1, 0, 0, 1));
     car_debug_vec(car->body.acceleration, fog_V4(0, 1, 0, 1));
     car_debug_vec(fog_rotate_v2(car->body.velocity, -car->body.rotation), fog_V4(1, 0, 1, 1));  // (x is always 0)
+
+    fog_util_tweak_f32("max velocity", &car->max_velocity, 1);
+    fog_util_tweak_f32_r("velocity length", reversing * fog_length_v2(car->body.velocity));
 }
 
 void draw_car(Car *car) {
