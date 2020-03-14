@@ -17,15 +17,7 @@ Level lvl = {};
 
 ShapeID square;
 
-void update() {
-    update_car(&car, fog_logic_delta());
-}
-
-void draw() {
-    draw_car(&car);
-    // for (u32 i = 0; i < num_bodies; i++) {
-    //     fog_physics_debug_draw_body(&bodies[i]);
-    // }
+void build_level() {
     static f32 noise = 2.0;
     static f32 offset = 0.2;
     static f32 smoothness = 3.0;
@@ -48,24 +40,19 @@ void draw() {
         gen_new_track = false;
     }
 
-#if 0
-    if (change) {
-        level_clear_sketch(&lvl_sketch);
-        lvl_sketch = level_gen_sketch(noise, offset, smoothness);
-        level_clear_blueprint(&lvl_bp);
-        lvl_bp = level_expand_sketch(&lvl_sketch, width, spacing, border_width);
-    }
-    level_clear(&lvl);
-    lvl = level_expand(&lvl_bp, square);
-
-    // draw_level_point_list(&lvl_sketch);
-    level_draw_blueprint(&lvl_bp);
-    level_draw(&lvl);
-#else
     if (change)
-        lvl = level_gen(noise, offset, smoothness, width, spacing, border_width, square);
+        lvl = level_gen(noise, offset, smoothness, width, spacing, border_width,
+                        square);
     level_draw(&lvl);
-#endif
+}
+
+void update() {
+    update_car(&car, fog_logic_delta());
+    build_level();
+}
+
+void draw() {
+    draw_car(&car);
 }
 
 int main(int argc, char **argv) {
@@ -93,7 +80,7 @@ int main(int argc, char **argv) {
         bodies[i].scale = fog_random_unit_vec2();
     }
 
-    fog_renderer_fetch_camera(0)->zoom = 1.0 / 5.0;
+    fog_renderer_fetch_camera(0)->zoom = 1.0 / 10.0;
 
     fog_run(update, draw);
 

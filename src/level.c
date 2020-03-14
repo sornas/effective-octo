@@ -11,13 +11,26 @@ static Vec2 from_polar(f32 angle, f32 distance) {
     return fog_V2(distance * cos(angle), distance * sin(angle));
 }
 
+// Swapping between generator functions
+#if 0
+// These are kinda funky, and cool
 static f32 distance_func(f32 t, f32 noise) {
-    return sin(noise * t) + sin(noise * 0.5 * t) + 3.0;
+    return sin(noise * t) + sin(noise * 0.5 * t) + 5.0;
 }
 
 static f32 angle_func(f32 t) {
     return t + t * sin(t) * 0.1;
 }
+#else
+// These give you more straights
+static f32 distance_func(f32 t, f32 noise) {
+    return cos(noise * t) + sin(noise * 0.333 * t) + 5.0;
+}
+
+static f32 angle_func(f32 t) {
+    return (t + t * t * 0.1) / 2.0;
+}
+#endif
 
 static Vec2 calculate_point(f32 t, f32 noise) {
     f32 angle = angle_func(t);
