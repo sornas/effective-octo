@@ -26,11 +26,11 @@ static Vec2 calculate_point(f32 t, f32 noise) {
     return point;
 }
 
-LevelPointList generate_level_point_list(f32 noise, f32 offset, f32 smoothness) {
+LevelSketch level_gen_sketch(f32 noise, f32 offset, f32 smoothness) {
     u32 num_samples = 8;
     f32 step = 2 * PI / (f32) num_samples;
 
-    LevelPointList point_list = {
+    LevelSketch point_list = {
         .num_points = num_samples,
         .points = malloc(num_samples * sizeof(Vec2)),
         .directions = malloc(num_samples * sizeof(Vec2)),
@@ -48,12 +48,12 @@ LevelPointList generate_level_point_list(f32 noise, f32 offset, f32 smoothness) 
     return point_list;
 }
 
-void clear_level_point_list(LevelPointList *list) {
-    if (list->points)
-        free(list->points);
-    if (list->directions)
-        free(list->directions);
-    list->num_points = 0;
+void level_clear_sketch(LevelSketch *sketch) {
+    if (sketch->points)
+        free(sketch->points);
+    if (sketch->directions)
+        free(sketch->directions);
+    sketch->num_points = 0;
 }
 
 static Vec2 sample_from_smoothness(Vec2 p1, Vec2 p2, Vec2 d1, Vec2 d2,
@@ -67,26 +67,17 @@ static Vec2 sample_from_smoothness(Vec2 p1, Vec2 p2, Vec2 d1, Vec2 d2,
 
 // Spam points
 // Filter the empty ones
-LevelEdges expand_to_edges(LevelPointList *list) {
-    static f32 width = 1.0;
-    fog_util_tweak_f32("Width", &width, 0.1);
-    static f32 spacing = 0.2;
-    fog_util_tweak_f32("Spacing", &spacing, 0.01);
-    static f32 border_width = 0.3;
-    fog_util_tweak_f32("Border width", &border_width, 0.1);
-    if (spacing < 0.01) {
-        spacing = 0.01;
-    }
-    if (spacing > 0.8) {
-        spacing = 0.8;
-    }
-    f32 smoothness = list->smoothness;
+LevelBlueprint level_expand_sketch(LevelSketch *sketch, f32 width, f32 spacing,
+                                   f32 border_width) {
+    assert(spacing >= 0.01 && spacing <= 0.8);
+    f32 smoothness = sketch->smoothness;
 
-    u32 maximum_num_points = list->num_points * (1.0 / spacing) * 4;
-    LevelEdges edge = {
+    u32 maximum_num_points = sketch->num_points * (1.0 / spacing) * 4;
+    LevelBlueprint bp = {
         .width = width,
-        .num_checkpoints = list->num_points,
-        .checkpoints = malloc(list->num_points * sizeof(Vec2)),
+        .border_width = border_width,
+        .num_checkpoints = sketch->num_points,
+        .checkpoints = malloc(sketch->num_points * sizeof(Vec2)),
         .num_track_points = 0,
         .points = malloc(maximum_num_points * sizeof(Vec2)),
         .num_right_edges = 0,
@@ -95,17 +86,17 @@ LevelEdges expand_to_edges(LevelPointList *list) {
         .left_edges = malloc(maximum_num_points * sizeof(Vec2)),
     };
 
-    for (u32 i = 0; i < list->num_points; i++) {
-        edge.checkpoints[i] = list->points[i];
+    for (u32 i = 0; i < sketch->num_points; i++) {
+        bp.checkpoints[i] = sketch->points[i];
     }
 
-    for (u32 i = 0; i < list->num_points; i++) {
-        Vec2 p1 = list->points[i];
-        Vec2 d1 = list->directions[i];
+    for (u32 i = 0; i < sketch->num_points; i++) {
+        Vec2 p1 = sketch->points[i];
+        Vec2 d1 = sketch->directions[i];
 
-        u32 j = (i + 1) % list->num_points;
-        Vec2 p2 = list->points[j];
-        Vec2 d2 = list->directions[j];
+        u32 j = (i + 1) % sketch->num_points;
+        Vec2 p2 = sketch->points[j];
+        Vec2 d2 = sketch->directions[j];
         for (f32 t = 0; t < 1.0; t += spacing) {
             Vec2 p = sample_from_smoothness(p1, p2, d1, d2, smoothness, t);
             Vec2 side;
@@ -120,106 +111,98 @@ LevelEdges expand_to_edges(LevelPointList *list) {
             Vec2 left_side = fog_sub_v2(p, side);
             Vec2 right_side = fog_add_v2(p, side);
 
-            edge.points[edge.num_track_points++] = p;
-            edge.left_edges[edge.num_left_edges++] = left_side;
-            edge.right_edges[edge.num_right_edges++] = right_side;
+            bp.points[bp.num_track_points++] = p;
+            bp.left_edges[bp.num_left_edges++] = left_side;
+            bp.right_edges[bp.num_right_edges++] = right_side;
         }
     }
 
-    for (u32 i = 0; i < edge.num_track_points; i++) {
-        Vec2 p = edge.points[i];
+    for (u32 i = 0; i < bp.num_track_points; i++) {
+        Vec2 p = bp.points[i];
 
         u32 removed_right = 0;
-        for (u32 j = 0; j < edge.num_right_edges; j++) {
-            Vec2 e = edge.right_edges[j];
+        for (u32 j = 0; j < bp.num_right_edges; j++) {
+            Vec2 e = bp.right_edges[j];
             Vec2 a = fog_V2(e.x, e.y);
-            if (fog_distance_v2(p, a) < edge.width - 0.01) {
+            if (fog_distance_v2(p, a) < bp.width - 0.01) {
                 removed_right++;
                 continue;
             }
             assert(removed_right <= j);
-            edge.right_edges[j - removed_right] = e;
+            bp.right_edges[j - removed_right] = e;
         }
-        edge.num_right_edges -= removed_right;
+        bp.num_right_edges -= removed_right;
 
         u32 removed_left = 0;
-        for (u32 j = 0; j < edge.num_left_edges; j++) {
-            Vec2 e = edge.left_edges[j];
+        for (u32 j = 0; j < bp.num_left_edges; j++) {
+            Vec2 e = bp.left_edges[j];
             Vec2 a = fog_V2(e.x, e.y);
-            if (fog_distance_v2(p, a) < edge.width - 0.01) {
+            if (fog_distance_v2(p, a) < bp.width - 0.01) {
                 removed_left++;
                 continue;
             }
             assert(removed_left <= j);
-            edge.left_edges[j - removed_left] = e;
+            bp.left_edges[j - removed_left] = e;
         }
-        edge.num_left_edges -= removed_left;
+        bp.num_left_edges -= removed_left;
     }
 
-    return edge;
+    return bp;
 }
 
-void draw_level_edge(LevelEdges *edge) {
+void level_draw_blueprint(LevelBlueprint *bp) {
     Vec2 a;
     Vec2 b;
 
-    for (u32 i = 0; i < edge->num_track_points; i++) {
-        u32 j = (i + 1) % edge->num_track_points;
-        a = edge->points[i];
-        b = edge->points[j];
+    for (u32 i = 0; i < bp->num_track_points; i++) {
+        u32 j = (i + 1) % bp->num_track_points;
+        a = bp->points[i];
+        b = bp->points[j];
         fog_renderer_push_line(0, a, b, fog_V4(1, 0, 0, 0.5), 0.05);
     }
 
-    for (u32 i = 0; i < edge->num_right_edges; i++) {
-        u32 j = (i + 1) % edge->num_right_edges;
-        a = edge->right_edges[i];
-        b = edge->right_edges[j];
+    for (u32 i = 0; i < bp->num_right_edges; i++) {
+        u32 j = (i + 1) % bp->num_right_edges;
+        a = bp->right_edges[i];
+        b = bp->right_edges[j];
         fog_renderer_push_line(0, a, b, fog_V4(0, 1, 0, 0.5), 0.05);
     }
 
-    for (u32 i = 0; i < edge->num_left_edges; i++) {
-        u32 j = (i + 1) % edge->num_left_edges;
-        a = edge->left_edges[i];
-        b = edge->left_edges[j];
+    for (u32 i = 0; i < bp->num_left_edges; i++) {
+        u32 j = (i + 1) % bp->num_left_edges;
+        a = bp->left_edges[i];
+        b = bp->left_edges[j];
         fog_renderer_push_line(0, a, b, fog_V4(0, 0, 1, 0.5), 0.05);
     }
 }
 
-void clear_level_edge(LevelEdges *edge) {
-    edge->num_checkpoints = 0;
-    edge->num_track_points = 0;
-    edge->num_right_edges = 0;
-    edge->num_left_edges = 0;
-    if (edge->checkpoints) {
-        free(edge->checkpoints);
+void level_clear_blueprint(LevelBlueprint *bp) {
+    bp->num_checkpoints = 0;
+    bp->num_track_points = 0;
+    bp->num_right_edges = 0;
+    bp->num_left_edges = 0;
+    if (bp->checkpoints) {
+        free(bp->checkpoints);
     }
-    if (edge->points) {
-        free(edge->points);
-        free(edge->right_edges);
-        free(edge->left_edges);
+    if (bp->points) {
+        free(bp->points);
+        free(bp->right_edges);
+        free(bp->left_edges);
     }
 }
 
-void draw_level_point_list(LevelPointList *list) {
-    static f32 width = 0.5;
-    fog_util_tweak_f32("Width", &width, 0.1);
-    static f32 spacing = 0.2;
-    fog_util_tweak_f32("Spacing", &spacing, 0.01);
-    if (spacing < 0.01) {
-        spacing = 0.01;
-    }
-    if (spacing > 0.8) {
-        spacing = 0.8;
-    }
-    f32 smoothness = list->smoothness;
+void level_draw_sketch(LevelSketch *sketch) {
+    f32 width = 0.5;
+    f32 spacing = 0.01;
+    f32 smoothness = sketch->smoothness;
     // fog_util_tweak_f32("Smoothness", &smoothness, 0.4);
-    for (u32 i = 0; i < list->num_points; i++) {
-        Vec2 p1 = list->points[i];
-        Vec2 d1 = list->directions[i];
+    for (u32 i = 0; i < sketch->num_points; i++) {
+        Vec2 p1 = sketch->points[i];
+        Vec2 d1 = sketch->directions[i];
 
-        u32 j = (i + 1) % list->num_points;
-        Vec2 p2 = list->points[j];
-        Vec2 d2 = list->directions[j];
+        u32 j = (i + 1) % sketch->num_points;
+        Vec2 p2 = sketch->points[j];
+        Vec2 d2 = sketch->directions[j];
         for (f32 t = 0; t < 1.0; t += spacing) {
             Vec2 p = sample_from_smoothness(p1, p2, d1, d2, smoothness, t);
             Vec2 start = sample_from_smoothness(p1, p2, d1, d2, smoothness, t - 0.005);
@@ -237,57 +220,57 @@ void draw_level_point_list(LevelPointList *list) {
     }
 }
 
-Level expand_to_level(LevelEdges *edge, ShapeID shape) {
-    u32 max_num_bodies = edge->num_right_edges + edge->num_left_edges;
+Level level_expand(LevelBlueprint *bp, ShapeID shape) {
+    u32 max_num_bodies = bp->num_right_edges + bp->num_left_edges;
     Body *bodies = malloc(max_num_bodies * sizeof(Body));
 
     u32 num_bodies = 0;
-    for (u32 i = 0; i < edge->num_left_edges; i++) {
-        u32 j = (i + 1) % edge->num_left_edges;
-        Vec2 a = edge->left_edges[i];
-        Vec2 b = edge->left_edges[j];
-        Body body = fog_physics_create_body(shape, 0);
+    for (u32 i = 0; i < bp->num_left_edges; i++) {
+        u32 j = (i + 1) % bp->num_left_edges;
+        Vec2 a = bp->left_edges[i];
+        Vec2 b = bp->left_edges[j];
+        Body body = fog_physics_create_body(shape, 0, 0.0, 0.0);
         body.position = fog_mul_v2(fog_add_v2(a, b), 0.5);
         // TODO(ed): This minus sign shouldn't be here. The engine is
         // wrong, and it's the body rotation that is wrong.
         body.rotation = fog_angle_v2(fog_sub_v2(b, a));
-        body.scale.y = 0.5; // Boarder width
+        body.scale.y = bp->border_width;
         body.scale.x = fog_distance_v2(a, b);
         assert(num_bodies < max_num_bodies);
         bodies[num_bodies++] = body;
     }
 
-    for (u32 i = 0; i < edge->num_right_edges; i++) {
-        u32 j = (i + 1) % edge->num_right_edges;
-        Vec2 a = edge->right_edges[i];
-        Vec2 b = edge->right_edges[j];
-        Body body = fog_physics_create_body(shape, 0);
+    for (u32 i = 0; i < bp->num_right_edges; i++) {
+        u32 j = (i + 1) % bp->num_right_edges;
+        Vec2 a = bp->right_edges[i];
+        Vec2 b = bp->right_edges[j];
+        Body body = fog_physics_create_body(shape, 0, 0.0, 0.0);
         body.position = fog_mul_v2(fog_add_v2(a, b), 0.5);
         // TODO(ed): This minus sign shouldn't be here. The engine is
         // wrong, and it's the body rotation that is wrong.
         body.rotation = fog_angle_v2(fog_sub_v2(b, a));
-        body.scale.y = 0.5; // Boarder width
+        body.scale.y = bp->border_width;
         body.scale.x = fog_distance_v2(a, b);
         assert(num_bodies < max_num_bodies);
         bodies[num_bodies++] = body;
     }
 
     Level level = {
-        .num_checkpoints = edge->num_checkpoints,
-        .checkpoints = malloc(edge->num_checkpoints * sizeof(Body)),
+        .num_checkpoints = bp->num_checkpoints,
+        .checkpoints = malloc(bp->num_checkpoints * sizeof(Body)),
 
         .num_bodies = num_bodies,
         .bodies = bodies,
     };
 
-    for (u32 i = 0; i < edge->num_checkpoints; i++) {
-        level.checkpoints[i] = edge->checkpoints[i];
+    for (u32 i = 0; i < bp->num_checkpoints; i++) {
+        level.checkpoints[i] = bp->checkpoints[i];
     }
 
     return level;
 }
 
-void draw_level(Level *level) {
+void level_draw(Level *level) {
     for (u32 i = 0; i < level->num_bodies; i++) {
         fog_physics_debug_draw_body(level->bodies + i);
     }
@@ -297,7 +280,17 @@ void draw_level(Level *level) {
     }
 }
 
-void clear_level(Level *level) {
-    free(level->bodies);
+void level_clear(Level *level) {
+    if (level->bodies)
+        free(level->bodies);
 }
 
+Level level_gen(f32 noise, f32 offset, f32 smoothness, f32 width, f32 spacing, f32 border_width, ShapeID shape) {
+    LevelSketch lvl_sketch = level_gen_sketch(noise, offset, smoothness);
+    LevelBlueprint lvl_bp =
+        level_expand_sketch(&lvl_sketch, width, spacing, border_width);
+    Level lvl = level_expand(&lvl_bp, shape);
+    level_clear_sketch(&lvl_sketch);
+    level_clear_blueprint(&lvl_bp);
+    return lvl;
+}

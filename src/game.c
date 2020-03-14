@@ -11,9 +11,10 @@ u32 num_bodies = 4;
 Body *bodies;
 Car car;
 
-LevelPointList point_list;
-LevelEdges edge;
-Level level;
+LevelSketch lvl_sketch = {};
+LevelBlueprint lvl_bp = {};
+Level lvl = {};
+
 ShapeID square;
 
 void update() {
@@ -28,31 +29,43 @@ void draw() {
     static f32 noise = 2.0;
     static f32 offset = 0.2;
     static f32 smoothness = 3.0;
+    static f32 width = 0.4;
+    static f32 spacing = 0.10;
+    static f32 border_width = 0.1;
     bool change = false;
     change |= fog_util_tweak_f32("Noise", &noise, 0.1);
     change |= fog_util_tweak_f32("Offset", &offset, 0.1);
     change |= fog_util_tweak_f32("Smoothness", &smoothness, 0.1);
+    change |= fog_util_tweak_f32("Width", &width, 0.1);
+    change |= fog_util_tweak_f32("Spacing", &spacing, 0.1);
+    change |= fog_util_tweak_f32("Border Width", &border_width, 0.1);
     static b8 gen_new_track = true;
     fog_util_tweak_b8("Gen new", &gen_new_track);
     if (gen_new_track) {
-        noise = 0.2 + fog_random_real(0.0) * 5;
-        offset = -5 + fog_random_real(0.0) * 10;
+        noise = fog_random_real(0.2, 5.0);
+        offset = fog_random_real(-5.0, 5.0);
         change = true;
         gen_new_track = false;
     }
 
+#if 0
     if (change) {
-        clear_level_point_list(&point_list);
-        point_list = generate_level_point_list(noise, offset, smoothness);
-        clear_level_edge(&edge);
-        edge = expand_to_edges(&point_list);
+        level_clear_sketch(&lvl_sketch);
+        lvl_sketch = level_gen_sketch(noise, offset, smoothness);
+        level_clear_blueprint(&lvl_bp);
+        lvl_bp = level_expand_sketch(&lvl_sketch, width, spacing, border_width);
     }
-    clear_level(&level);
-    level = expand_to_level(&edge, square);
+    level_clear(&lvl);
+    lvl = level_expand(&lvl_bp, square);
 
-    // draw_level_point_list(&point_list);
-    draw_level_edge(&edge);
-    draw_level(&level);
+    // draw_level_point_list(&lvl_sketch);
+    level_draw_blueprint(&lvl_bp);
+    level_draw(&lvl);
+#else
+    if (change)
+        lvl = level_gen(noise, offset, smoothness, width, spacing, border_width, square);
+    level_draw(&lvl);
+#endif
 }
 
 int main(int argc, char **argv) {
@@ -69,12 +82,13 @@ int main(int argc, char **argv) {
 
     car_sprite = fog_asset_fetch_id("CAR_SPRITE");
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
+
     square = car_shape;
     car = create_car(P1);
     //body = fog_physics_create_body(car_shape, 0);
     bodies = malloc(sizeof(Body) * num_bodies);
     for (u32 i = 0; i < num_bodies; i++) {
-        bodies[i] = fog_physics_create_body(car_shape, 0);
+        bodies[i] = fog_physics_create_body(car_shape, 0, 0.0, 0.0);
         bodies[i].position = fog_random_unit_vec2();
         bodies[i].scale = fog_random_unit_vec2();
     }
