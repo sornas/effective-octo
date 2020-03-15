@@ -30,12 +30,26 @@ f32 clamp_f32(f32 min, f32 max, f32 v) {
     return min_f32(max, max_f32(min, v));
 }
 
+static inline
+f32 sign_f32(f32 a) {
+    if (a >= 0)
+        return 1;
+    return -1;
+}
+
+static inline
+f32 abs_f32(f32 a) {
+    if (a >= 0)
+        return a;
+    return -a;
+}
+
 Car create_car(Player player) {
     Car car = {
         .player = player,
         .body = fog_physics_create_body(car_shape, 1.0, 0.0, 0.0),
 
-        .wheel_turn_max = 1,
+        .wheel_turn_max = PI / 6,
         .wheel_turn_speed = 2,
         .wheel_turn = 0,
 
@@ -47,6 +61,7 @@ Car create_car(Player player) {
         .wheel_friction_dynamic = 0.5,
     };
     car.body.scale = fog_V2(0.1, 0.1);
+    car.body.damping = 0.3;
     return car;
 }
 
@@ -65,10 +80,15 @@ void update_car(Car *car, f32 delta) {
     if (fog_input_down(NAME(LEFT), car->player)) {
         car->wheel_turn = min_f32(car->wheel_turn + (car->wheel_turn_speed * delta),
                                   car->wheel_turn_max);
-    }
-    if (fog_input_down(NAME(RIGHT), car->player)) {
+    } else if (fog_input_down(NAME(RIGHT), car->player)) {
         car->wheel_turn = max_f32(car->wheel_turn - (car->wheel_turn_speed * delta),
                                   -car->wheel_turn_max);
+    } else {
+        f32 max = car->wheel_turn_speed * delta;
+        if (abs_f32(car->wheel_turn) < max)
+            car->wheel_turn = 0;
+        else
+            car->wheel_turn -= sign_f32(car->wheel_turn) * max;
     }
 #if 0
     //x1y2 - x2y1
