@@ -90,18 +90,6 @@ void update_car(Car *car, f32 delta) {
         else
             car->wheel_turn -= sign_f32(car->wheel_turn) * max;
     }
-#if 0
-    //x1y2 - x2y1
-    Vec2 front_pos = fog_rotate_v2(fog_div_v2(fog_V2(car->body.scale.x, 0), 2),
-                                   car->body.rotation);
-    Vec2 wheel_friction_front = fog_rotate_v2(fog_normalize_v2(front_pos), car->wheel_turn - PI/2);
-
-    Vec2 wheel_friction_front_comp = fog_mul_v2(wheel_friction_front, fog_dot_v2(car->body.velocity, wheel_friction_front) * car->wheel_friction_static);
-
-    f32 angular_velocity = front_pos.x * wheel_friction_front_comp.y - front_pos.y * wheel_friction_front_comp.x;
-
-    car->body.rotation += angular_velocity;
-#endif
 
     static f32 car_length = 0.5;
     static f32 max_friction_front = 2.0;
@@ -114,6 +102,8 @@ void update_car(Car *car, f32 delta) {
 
     fog_util_tweak_f32("max front", &max_friction_front, 0.1);
     fog_util_tweak_f32("grip front", &grip_constant_front, 0.1);
+
+    grip_constant_back = min_f32(2.0 / (fog_length_v2(car->body.velocity) + 0.1), 1.0);
 
     fog_util_tweak_f32("max back", &max_friction_back, 0.1);
     fog_util_tweak_f32("grip back", &grip_constant_back, 0.1);
