@@ -3,7 +3,7 @@
 Car create_car(Player player) {
     Car car = {
         .player = player,
-        .body = fog_physics_create_body(car_shape, 1.0),
+        .body = fog_physics_create_body(car_shape, 1.0, 0.0, 0.0),
     };
     car.body.scale = fog_V2(0.1, 0.1);
     return car;
