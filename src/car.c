@@ -3,13 +3,6 @@
 
 #define PI 3.1416
 
-///*
-// Set a vector to {0, 0} in-place.
-void reset_vec2(Vec2 *v) {
-    v->x = 0;
-    v->y = 0;
-}
-
 static inline
 f32 min_f32(f32 a, f32 b) {
     return a < b ? a : b;

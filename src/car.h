@@ -17,7 +17,7 @@ typedef struct {
 } Car;
 
 ///
-// Craete a new car.
+// Create a new car.
 Car create_car(Player player);
 
 ///
