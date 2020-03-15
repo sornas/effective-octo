@@ -49,7 +49,7 @@ Car create_car(Player player) {
         .player = player,
         .body = fog_physics_create_body(car_shape, 1.0, 0.0, 0.0),
 
-        .wheel_turn_max = PI / 6,
+        .wheel_turn_max = PI / 4,
         .wheel_turn_speed = 2,
         .wheel_turn = 0,
 
@@ -134,18 +134,26 @@ void update_car(Car *car, f32 delta) {
     f32  front_fric_scale = clamp_f32(-max_friction_front, max_friction_front,
                                   fog_dot_v2(fric_total, front_normal) * grip_constant_front);
     Vec2 front_fric = fog_mul_v2(front_normal, front_fric_scale);
-    angular_velocity += cross_v2(front_fric, car_dir) * car_length;
+    angular_velocity += cross_v2(front_fric, car_dir) / (car_length * grip_constant_front);
 
     Vec2 back_normal = fog_rotate_v2(i_hat, rot - PI / 2);
     f32  back_fric_scaler = clamp_f32(-max_friction_back, max_friction_back,
                                        fog_dot_v2(fric_total, back_normal) * grip_constant_back);
     Vec2 back_fric = fog_mul_v2(back_normal, back_fric_scaler);
-    angular_velocity += cross_v2(back_fric, car_dir) * car_length;
+    angular_velocity -= cross_v2(back_fric, car_dir) / (car_length * grip_constant_back);
     car->body.rotation += angular_velocity * delta;
 
+    Vec2 friction = fog_V2(0, 0);
+    friction = fog_add_v2(friction, front_fric);
+    friction = fog_add_v2(friction, back_fric);
 
-    car->body.acceleration = fog_add_v2(car->body.acceleration, front_fric);
-    car->body.acceleration = fog_add_v2(car->body.acceleration, back_fric);
+#if 1
+    Vec2 new_forward = fog_rotate_v2(i_hat, car->body.rotation);
+    Vec2 vel_comp = fog_mul_v2(new_forward, -0.5 * fog_dot_v2(friction, new_forward));
+    car->body.acceleration = fog_add_v2(car->body.acceleration, vel_comp);
+#endif
+
+    car->body.acceleration = fog_add_v2(car->body.acceleration, friction);
 
     fog_physics_integrate(&car->body, delta);
     for (u32 i = 0; i < num_bodies; i++) {
