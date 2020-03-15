@@ -41,6 +41,10 @@ engine: $(ENGINE)
 debug: game
 	gdb $(GAME)
 
+info:
+	$(info $(SRCS))
+	$(info $(OBJS))
+
 run: game
 	./$(GAME)
 

@@ -5,6 +5,7 @@
 
 #include "game.h"
 #include "car.h"
+#include "level.h"
 
 u32 num_bodies = 4;
 Body *bodies;
@@ -19,8 +20,44 @@ AssetID fetch_car_sprite(f32 angle) {
     return CAR_SPRITES[(index + NUM_CAR_SPRTIES / 2) % NUM_CAR_SPRTIES];
 }
 
+LevelSketch lvl_sketch = {};
+LevelBlueprint lvl_bp = {};
+Level lvl = {};
+
+ShapeID square;
+
+void build_level() {
+    static f32 noise = 2.0;
+    static f32 offset = 0.2;
+    static f32 smoothness = 3.0;
+    static f32 width = 0.4;
+    static f32 spacing = 0.10;
+    static f32 border_width = 0.1;
+    bool change = false;
+    change |= fog_util_tweak_f32("Noise", &noise, 0.1);
+    change |= fog_util_tweak_f32("Offset", &offset, 0.1);
+    change |= fog_util_tweak_f32("Smoothness", &smoothness, 0.1);
+    change |= fog_util_tweak_f32("Width", &width, 0.1);
+    change |= fog_util_tweak_f32("Spacing", &spacing, 0.1);
+    change |= fog_util_tweak_f32("Border Width", &border_width, 0.1);
+    static b8 gen_new_track = true;
+    fog_util_tweak_b8("Gen new", &gen_new_track);
+    if (gen_new_track) {
+        noise = fog_random_real(0.2, 5.0);
+        offset = fog_random_real(-5.0, 5.0);
+        change = true;
+        gen_new_track = false;
+    }
+
+    if (change)
+        lvl = level_gen(noise, offset, smoothness, width, spacing, border_width,
+                        square);
+    level_draw(&lvl);
+}
+
 void update() {
     update_car(&car, fog_logic_delta());
+    build_level();
 }
 
 void draw() {
@@ -68,15 +105,18 @@ int main(int argc, char **argv) {
     }
 
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
+
+    square = car_shape;
     car = create_car(P1);
     //body = fog_physics_create_body(car_shape, 0);
-
     bodies = malloc(sizeof(Body) * num_bodies);
     for (u32 i = 0; i < num_bodies; i++) {
         bodies[i] = fog_physics_create_body(car_shape, 0, 0.0, 0.0);
         bodies[i].position = fog_random_unit_vec2();
         bodies[i].scale = fog_random_unit_vec2();
     }
+
+    fog_renderer_fetch_camera(0)->zoom = 1.0 / 10.0;
 
     fog_run(update, draw);
 
