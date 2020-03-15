@@ -23,6 +23,7 @@ AssetID fetch_car_sprite(f32 angle) {
 LevelSketch lvl_sketch = {};
 LevelBlueprint lvl_bp = {};
 Level lvl = {};
+b8 level_exists = false;
 
 ShapeID square;
 
@@ -34,24 +35,35 @@ void build_level() {
     static f32 spacing = 0.10;
     static f32 border_width = 0.1;
     bool change = false;
-    change |= fog_util_tweak_f32("Noise", &noise, 0.1);
-    change |= fog_util_tweak_f32("Offset", &offset, 0.1);
-    change |= fog_util_tweak_f32("Smoothness", &smoothness, 0.1);
-    change |= fog_util_tweak_f32("Width", &width, 0.1);
-    change |= fog_util_tweak_f32("Spacing", &spacing, 0.1);
-    change |= fog_util_tweak_f32("Border Width", &border_width, 0.1);
-    static b8 gen_new_track = true;
-    fog_util_tweak_b8("Gen new", &gen_new_track);
-    if (gen_new_track) {
-        noise = fog_random_real(0.2, 5.0);
-        offset = fog_random_real(-5.0, 5.0);
-        change = true;
-        gen_new_track = false;
-    }
 
-    if (change)
+    if (!level_exists) {
         lvl = level_gen(noise, offset, smoothness, width, spacing, border_width,
                         square);
+        level_exists = true;
+    }
+
+    static b8 track_parameters = 0;
+    if (fog_util_begin_tweak_section("track parameters", &track_parameters)) {
+        change |= fog_util_tweak_f32("Noise", &noise, 0.1);
+        change |= fog_util_tweak_f32("Offset", &offset, 0.1);
+        change |= fog_util_tweak_f32("Smoothness", &smoothness, 0.1);
+        change |= fog_util_tweak_f32("Width", &width, 0.1);
+        change |= fog_util_tweak_f32("Spacing", &spacing, 0.1);
+        change |= fog_util_tweak_f32("Border Width", &border_width, 0.1);
+        static b8 gen_new_track = false;
+        fog_util_tweak_b8("Gen new", &gen_new_track);
+        if (gen_new_track) {
+            noise = fog_random_real(0.2, 5.0);
+            offset = fog_random_real(-5.0, 5.0);
+            change = true;
+            gen_new_track = false;
+        }
+
+        if (change)
+            lvl = level_gen(noise, offset, smoothness, width, spacing, border_width,
+                            square);
+    }
+    fog_util_end_tweak_section(&track_parameters);
     level_draw(&lvl);
 }
 
