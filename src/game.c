@@ -38,10 +38,12 @@ int main(int argc, char **argv) {
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
     car = create_car(P1);
     //body = fog_physics_create_body(car_shape, 0);
+    fog_renderer_fetch_camera(0)->zoom = 1.0 / 7.0;
+    fog_renderer_set_window_size(800, 800);
 
     bodies = malloc(sizeof(Body) * num_bodies);
     for (u32 i = 0; i < num_bodies; i++) {
-        bodies[i] = fog_physics_create_body(car_shape, 0);
+        bodies[i] = fog_physics_create_body(car_shape, 0, 0.0, 0.0);
         bodies[i].position = fog_random_unit_vec2();
         bodies[i].scale = fog_random_unit_vec2();
     }
