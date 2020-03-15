@@ -87,15 +87,19 @@ void update_car(Car *car, f32 delta) {
     static f32 max_friction_back = 1.5;
     static f32 grip_constant_back = 1.0;
 
-    fog_util_tweak_f32("car_length", &car_length, 0.1);
-
-    fog_util_tweak_f32("max front", &max_friction_front, 0.1);
-    fog_util_tweak_f32("grip front", &grip_constant_front, 0.1);
-
     grip_constant_back = min_f32(2.0 / (fog_length_v2(car->body.velocity) + 0.1), 1.0);
 
-    fog_util_tweak_f32("max back", &max_friction_back, 0.1);
-    fog_util_tweak_f32("grip back", &grip_constant_back, 0.1);
+    static b8 car_parameters = 0;
+    if (fog_util_begin_tweak_section("car parameters", &car_parameters)) {
+        fog_util_tweak_f32("car_length", &car_length, 0.1);
+
+        fog_util_tweak_f32("max front", &max_friction_front, 0.1);
+        fog_util_tweak_f32("grip front", &grip_constant_front, 0.1);
+
+        fog_util_tweak_f32("max back", &max_friction_back, 0.1);
+        fog_util_tweak_f32("grip back", &grip_constant_back, 0.1);
+    }
+    fog_util_end_tweak_section(&car_parameters);
 
     f32 mu = car->wheel_friction_static;
     f32 rot = car->body.rotation;
