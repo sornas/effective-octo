@@ -54,11 +54,8 @@ Car create_car(Player player) {
         .wheel_turn = 0,
 
         .acceleration = 3,
-        .brake = 5,
 
         .wheel_friction_static = 1,
-        .wheel_friction_static_max = 3,
-        .wheel_friction_dynamic = 0.5,
     };
     car.body.scale = fog_V2(0.1, 0.1);
     car.body.damping = 0.3;
@@ -136,11 +133,9 @@ void update_car(Car *car, f32 delta) {
     friction = fog_add_v2(friction, front_fric);
     friction = fog_add_v2(friction, back_fric);
 
-#if 1
     Vec2 new_forward = fog_rotate_v2(i_hat, car->body.rotation);
     Vec2 vel_comp = fog_mul_v2(new_forward, -0.5 * fog_dot_v2(friction, new_forward));
     car->body.acceleration = fog_add_v2(car->body.acceleration, vel_comp);
-#endif
 
     car->body.acceleration = fog_add_v2(car->body.acceleration, friction);
 
