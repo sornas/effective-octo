@@ -6,6 +6,17 @@ AssetID car_sprite;
 typedef struct {
     Player player;
     Body body;
+
+    f32 wheel_turn_max;
+    f32 wheel_turn_speed;
+    f32 wheel_turn;
+
+    f32 acceleration;
+    f32 brake;
+
+    f32 wheel_friction_static;
+    f32 wheel_friction_static_max;
+    f32 wheel_friction_dynamic;
 } Car;
 
 ///
