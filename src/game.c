@@ -69,6 +69,7 @@ void build_level() {
 
 void update() {
     update_car(&car, fog_logic_delta());
+    fog_renderer_fetch_camera(0)->position = fog_add_v2(car.body.position, fog_mul_v2(car.body.velocity, 0.01));
     build_level();
 }
 
@@ -121,8 +122,8 @@ int main(int argc, char **argv) {
     square = car_shape;
     car = create_car(P1);
 
-    fog_renderer_fetch_camera(0)->zoom = 1.0 / 7.0;
     fog_renderer_set_window_size(800, 800);
+    fog_renderer_fetch_camera(0)->zoom = 1.0 / 5.0;
 
     bodies = malloc(sizeof(Body) * num_bodies);
     for (u32 i = 0; i < num_bodies; i++) {
@@ -130,8 +131,6 @@ int main(int argc, char **argv) {
         bodies[i].position = fog_random_unit_vec2();
         bodies[i].scale = fog_random_unit_vec2();
     }
-
-    fog_renderer_fetch_camera(0)->zoom = 1.0 / 10.0;
 
     fog_run(update, draw);
 
