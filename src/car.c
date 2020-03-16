@@ -59,7 +59,7 @@ Car create_car(Player player) {
 
         .wheel_friction_static = 1,
     };
-    car.body.scale = fog_V2(0.1, 0.1);
+    car.body.scale = fog_V2(0.5, 0.5);
     car.body.damping = 0.3;
     return car;
 }
@@ -172,7 +172,7 @@ void update_car(Car *car, f32 delta) {
 }
 
 void draw_car(Car *car) {
-    //fog_renderer_push_sprite(0, car_sprite, car->body.position, car->body.scale, 0, fog_V4(1, 1, 1, 1));
-    fog_renderer_push_sprite(0, fetch_car_sprite(car->body.rotation + car->wheel_turn/4), car->body.position, fog_V2(2, 2), 0, fog_V4(1, 1, 1, 1));
+    fog_physics_debug_draw_body(&car->body);
+    fog_renderer_push_sprite(0, fetch_car_sprite(car->body.rotation + car->wheel_turn/4), car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
 }
 
