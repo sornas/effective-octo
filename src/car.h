@@ -3,6 +3,11 @@
 ShapeID car_shape;
 AssetID car_sprite;
 
+#define NUM_CAR_SPRTIES 16
+extern AssetID CAR_SPRITES[NUM_CAR_SPRTIES];
+
+AssetID fetch_car_sprite(f32 angle);
+
 typedef struct {
     Player player;
     Body body;

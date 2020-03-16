@@ -1,6 +1,8 @@
 #include "car.h"
 #include <math.h>
 
+AssetID CAR_SPRITES[NUM_CAR_SPRTIES] = {};
+
 #define PI 3.1416
 
 static inline
@@ -36,6 +38,13 @@ f32 abs_f32(f32 a) {
         return a;
     return -a;
 }
+
+AssetID fetch_car_sprite(f32 angle) {
+    const f32 spacing = 2 * 3.1415 / NUM_CAR_SPRTIES;
+    s32 index = (s32) (angle / spacing);
+    return CAR_SPRITES[(index + NUM_CAR_SPRTIES / 2) % NUM_CAR_SPRTIES];
+}
+
 
 Car create_car(Player player) {
     Car car = {
@@ -163,6 +172,7 @@ void update_car(Car *car, f32 delta) {
 }
 
 void draw_car(Car *car) {
-    fog_renderer_push_sprite(0, car_sprite, car->body.position, car->body.scale, 0, fog_V4(1, 1, 1, 1));
+    //fog_renderer_push_sprite(0, car_sprite, car->body.position, car->body.scale, 0, fog_V4(1, 1, 1, 1));
+    fog_renderer_push_sprite(0, fetch_car_sprite(car->body.rotation + car->wheel_turn/4), car->body.position, fog_V2(2, 2), 0, fog_V4(1, 1, 1, 1));
 }
 
