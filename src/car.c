@@ -73,12 +73,10 @@ Car create_car(Player player) {
     car.exhaust_particles.one_color = 1;
     car.exhaust_particles.one_alpha = 0;
     car.exhaust_particles.one_size = 0;
-    car.exhaust_particles.drop_oldest = 1;
-    car.exhaust_particles.alive_time = (Span) { 1, 2 };
+    car.exhaust_particles.alive_time = (Span) { 1, 1 };
     car.exhaust_particles.position_x = (Span) { 0, 0 };
     car.exhaust_particles.position_y = (Span) { 0, 0 };
     car.exhaust_particles.velocity = (Span) { 1, 1 };
-    car.exhaust_particles.velocity_dir = (Span) { 0, 2 * PI };
     car.exhaust_particles.acceleration = (Span) { 0, 0 };
     car.exhaust_particles.spawn_size = (Span) { 0, 0 };
     car.exhaust_particles.spawn_red = (Span) { 0, 0 };
@@ -94,6 +92,7 @@ void update_car(Car *car, f32 delta) {
     if (fog_input_down(NAME(FORWARD), car->player)) {
         car->body.acceleration = fog_V2(car->acceleration * cos(car->body.rotation),
                                         car->acceleration * sin(car->body.rotation));
+        car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI, car->body.rotation + PI };
         fog_renderer_particle_spawn(&car->exhaust_particles, 1);
     } else if (fog_input_down(NAME(BACKWARD), car->player)) {
         car->body.acceleration = fog_V2(-car->acceleration * cos(car->body.rotation),
@@ -186,6 +185,8 @@ void update_car(Car *car, f32 delta) {
         1, fog_add_v2(car->body.position, o),                                 \
         fog_add_v2(fog_add_v2(car->body.position, fog_mul_v2(v, 0.2)), o), c, \
         0.02)
+#define world_debug_vec(v, o, c)                                              \
+    fog_renderer_push_line(1, o, fog_add_v2(o, v), c, 0.02)
 
     car_debug_vec(car_dir, fog_V2(0, 0), fog_V4(0, 1, 0, 1));
     car_debug_vec(fric_total, fog_V2(0, 0), fog_V4(1, 0, 0, 1));
@@ -199,6 +200,8 @@ void update_car(Car *car, f32 delta) {
     car_debug_vec(back_normal, b, fog_V4(1, 0, 0, 1));
     car_debug_vec(fog_neg_v2(back_normal), b, fog_V4(1, 0, 0, 1));
     car_debug_vec(back_fric, b, fog_V4(1, 1, 0, 1));
+    
+    world_debug_vec(car->exhaust_particles.position, fog_V2(0, 0), fog_V4(0, 0, 0, 1));
 }
 
 void draw_car(Car *car) {
