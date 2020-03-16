@@ -71,10 +71,6 @@ void draw() {
     for (u32 i = 0; i < num_bodies; i++) {
         fog_physics_debug_draw_body(&bodies[i]);
     }
-    static f32 angle = 0;
-    fog_util_tweak_f32("angle", &angle, 0.1);
-    //fog_renderer_push_sprite(0, fetch_car_sprite(angle), fog_V2(0, 0), fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
-
 
     fog_random_seed(0);
     fog_renderer_push_sprite(0, PINE_SPRITES[0], fog_random_unit_vec2(),
