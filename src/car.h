@@ -12,6 +12,8 @@ typedef struct {
     Player player;
     Body body;
 
+    ParticleSystem exhaust_particles;
+
     f32 wheel_turn_max;
     f32 wheel_turn_speed;
     f32 wheel_turn;

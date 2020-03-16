@@ -51,6 +51,8 @@ Car create_car(Player player) {
         .player = player,
         .body = fog_physics_create_body(car_shape, 1.0, 0.0, 0.0),
 
+        .exhaust_particles = fog_renderer_create_particle_system(0, 500, fog_V2(0, 0)),
+
         .wheel_turn_max = PI / 4,
         .wheel_turn_speed = 2,
         .wheel_turn = 0,
@@ -61,6 +63,23 @@ Car create_car(Player player) {
     };
     car.body.scale = fog_V2(0.5, 0.5);
     car.body.damping = 0.3;
+
+    car.exhaust_particles.one_color = 1;
+    car.exhaust_particles.one_alpha = 0;
+    car.exhaust_particles.one_size = 0;
+    car.exhaust_particles.drop_oldest = 1;
+    car.exhaust_particles.alive_time = (Span) { 1, 2 };
+    car.exhaust_particles.position_x = (Span) { 0, 0 };
+    car.exhaust_particles.position_y = (Span) { 0, 0 };
+    car.exhaust_particles.velocity = (Span) { 0, 0.5 };
+    car.exhaust_particles.acceleration = (Span) { 0, 0 };
+    car.exhaust_particles.spawn_size = (Span) { 0, 0 };
+    car.exhaust_particles.spawn_red = (Span) { 0, 0 };
+    car.exhaust_particles.spawn_green = (Span) { 0, 0 };
+    car.exhaust_particles.spawn_blue = (Span) { 0, 0 };
+    car.exhaust_particles.spawn_alpha = (Span) { 0.8, 1 };
+    car.exhaust_particles.die_size = (Span) { 0.5, 1 };
+    car.exhaust_particles.die_alpha = (Span) { 0, 0 };
     return car;
 }
 
@@ -68,6 +87,7 @@ void update_car(Car *car, f32 delta) {
     if (fog_input_down(NAME(FORWARD), car->player)) {
         car->body.acceleration = fog_V2(car->acceleration * cos(car->body.rotation),
                                         car->acceleration * sin(car->body.rotation));
+        fog_renderer_particle_spawn(&car->exhaust_particles, 1);
     } else if (fog_input_down(NAME(BACKWARD), car->player)) {
         car->body.acceleration = fog_V2(-car->acceleration * cos(car->body.rotation),
                                         -car->acceleration * sin(car->body.rotation));
@@ -150,6 +170,10 @@ void update_car(Car *car, f32 delta) {
         fog_physics_solve(fog_physics_check_overlap(&car->body, &bodies[i]));
     }
 
+    car->exhaust_particles.position = car->body.position;
+    fog_util_tweak_vec2("exhaust position", &car->exhaust_particles.position, 1);
+    fog_renderer_particle_update(&car->exhaust_particles, delta);
+
 #define car_debug_vec(v, o, c)                                                \
     fog_renderer_push_line(                                                   \
         1, fog_add_v2(car->body.position, o),                                 \
@@ -158,7 +182,6 @@ void update_car(Car *car, f32 delta) {
 
     car_debug_vec(car_dir, fog_V2(0, 0), fog_V4(0, 1, 0, 1));
     car_debug_vec(fric_total, fog_V2(0, 0), fog_V4(1, 0, 0, 1));
-
 
     Vec2 f = fog_mul_v2(car_dir, car_length);
     car_debug_vec(front_normal, f, fog_V4(1, 0, 0, 1));
@@ -174,5 +197,7 @@ void update_car(Car *car, f32 delta) {
 void draw_car(Car *car) {
     fog_physics_debug_draw_body(&car->body);
     fog_renderer_push_sprite(0, fetch_car_sprite(car->body.rotation + car->wheel_turn/4), car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
+
+    fog_renderer_particle_draw(&car->exhaust_particles);
 }
 
