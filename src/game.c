@@ -103,6 +103,7 @@ int main(int argc, char **argv) {
     fog_input_add(fog_key_to_input_code(SDLK_d), NAME(RIGHT), P1);
     fog_input_add(fog_key_to_input_code(SDLK_w), NAME(FORWARD), P1);
     fog_input_add(fog_key_to_input_code(SDLK_s), NAME(BACKWARD), P1);
+    fog_input_add(fog_key_to_input_code(SDLK_SPACE), NAME(DRIFT), P1);
 
     car_sprite = fog_asset_fetch_id("CAR_SPRITE");
 
