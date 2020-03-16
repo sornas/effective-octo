@@ -3,8 +3,8 @@
 ShapeID car_shape;
 AssetID car_sprite;
 
-#define NUM_CAR_SPRTIES 16
-extern AssetID CAR_SPRITES[NUM_CAR_SPRTIES];
+#define NUM_CAR_SPRITES 16
+extern AssetID CAR_SPRITES[NUM_CAR_SPRITES];
 
 AssetID fetch_car_sprite(f32 angle);
 

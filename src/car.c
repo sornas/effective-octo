@@ -1,7 +1,8 @@
 #include "car.h"
 #include <math.h>
+#include <stdio.h>
 
-AssetID CAR_SPRITES[NUM_CAR_SPRTIES] = {};
+AssetID CAR_SPRITES[NUM_CAR_SPRITES] = {};
 
 #define PI 3.1416
 
@@ -39,10 +40,15 @@ f32 abs_f32(f32 a) {
     return -a;
 }
 
+static inline
+s32 mod_s32(s32 a, s32 b) {
+    return ((a % b) + b) % b;
+}
+
 AssetID fetch_car_sprite(f32 angle) {
-    const f32 spacing = 2 * 3.1415 / NUM_CAR_SPRTIES;
-    s32 index = (s32) (angle / spacing);
-    return CAR_SPRITES[(index + NUM_CAR_SPRTIES / 2) % NUM_CAR_SPRTIES];
+    const f32 spacing = 2 * 3.1415 / NUM_CAR_SPRITES;
+    s32 index = (s32) ((angle + spacing/2) / spacing);
+    return CAR_SPRITES[mod_s32(index + NUM_CAR_SPRITES / 2, NUM_CAR_SPRITES)];
 }
 
 
@@ -71,7 +77,8 @@ Car create_car(Player player) {
     car.exhaust_particles.alive_time = (Span) { 1, 2 };
     car.exhaust_particles.position_x = (Span) { 0, 0 };
     car.exhaust_particles.position_y = (Span) { 0, 0 };
-    car.exhaust_particles.velocity = (Span) { 0, 0.5 };
+    car.exhaust_particles.velocity = (Span) { 1, 1 };
+    car.exhaust_particles.velocity_dir = (Span) { 0, 2 * PI };
     car.exhaust_particles.acceleration = (Span) { 0, 0 };
     car.exhaust_particles.spawn_size = (Span) { 0, 0 };
     car.exhaust_particles.spawn_red = (Span) { 0, 0 };

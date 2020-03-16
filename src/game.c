@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     fog_input_add(fog_key_to_input_code(SDLK_SPACE), NAME(DRIFT), P1);
 
     char str[100] = {};
-    for (u32 i = 0; i < NUM_CAR_SPRTIES; i++) {
+    for (u32 i = 0; i < NUM_CAR_SPRITES; i++) {
         sprintf(str, "CAR%d", i);
         CAR_SPRITES[i] = fog_asset_fetch_id(str);
     }
