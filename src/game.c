@@ -21,7 +21,6 @@ AssetID fetch_car_sprite(f32 angle) {
 LevelSketch lvl_sketch = {};
 LevelBlueprint lvl_bp = {};
 Level lvl = {};
-b8 level_exists = false;
 
 ShapeID square;
 
@@ -32,13 +31,7 @@ void build_level() {
     static f32 width = 1.4;
     static f32 spacing = 0.3;
     static f32 border_width = 0.5;
-    bool change = false;
-
-    if (!level_exists) {
-        lvl = level_gen(noise, offset, smoothness, width, spacing, border_width,
-                        square);
-        level_exists = true;
-    }
+    static bool change = true;
 
     static b8 track_parameters = 0;
     if (fog_util_begin_tweak_section("track parameters", &track_parameters)) {
@@ -47,20 +40,24 @@ void build_level() {
         change |= fog_util_tweak_f32("Smoothness", &smoothness, 0.1);
         change |= fog_util_tweak_f32("Width", &width, 0.1);
         change |= fog_util_tweak_f32("Spacing", &spacing, 0.1);
+        spacing = spacing < 0.01 ? 0.01 : spacing;
+
         change |= fog_util_tweak_f32("Border Width", &border_width, 0.1);
-        static b8 gen_new_track = false;
-        fog_util_tweak_b8("Gen new", &gen_new_track);
-        if (gen_new_track) {
+
+        b8 gen_new_track = false;
+        if (change |= fog_util_tweak_b8("Gen new", &gen_new_track)) {
             noise = fog_random_real(0.2, 5.0);
             offset = fog_random_real(-5.0, 5.0);
-            change = true;
-            gen_new_track = false;
         }
-
-        if (change)
-            lvl = level_gen(noise, offset, smoothness, width, spacing, border_width,
-                            square);
     }
+
+    if (change) {
+        lvl = level_gen(noise, offset, smoothness, width, spacing,
+                border_width, square);
+        level_place(&lvl, &car);
+        change = false;
+    }
+
     fog_util_end_tweak_section(&track_parameters);
 }
 
@@ -120,9 +117,6 @@ int main(int argc, char **argv) {
 
     fog_renderer_set_window_size(800, 800);
     fog_renderer_fetch_camera(0)->zoom = 1.0 / 5.0;
-
-    build_level();
-    level_place(&lvl, &car);
 
     fog_run(update, draw);
 
