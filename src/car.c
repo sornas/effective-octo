@@ -2,6 +2,8 @@
 #include "level.h"
 #include <math.h>
 
+#include <stdio.h>
+
 #define PI 3.1416
 
 static inline
@@ -50,6 +52,9 @@ Car create_car(Player player) {
         .acceleration = 3,
 
         .wheel_friction_static = 1,
+
+        .next_checkpoint = 1, // So we don't go into the goal on the first lap.
+        .current_lap = 0,
     };
     car.body.scale = fog_V2(0.1, 0.1);
     car.body.damping = 0.3;
@@ -99,6 +104,8 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 
         fog_util_tweak_f32("max back", &max_friction_back, 0.1);
         fog_util_tweak_f32("grip back", &grip_constant_back, 0.1);
+
+        fog_util_tweak_u32_r("current lap", car->current_lap);
     }
     fog_util_end_tweak_section(&car_parameters);
 
@@ -137,11 +144,28 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 
     car->body.acceleration = fog_add_v2(car->body.acceleration, friction);
 
+    // Collisions
     fog_physics_integrate(&car->body, delta);
     for (u32 i = 0; i < lvl->num_bodies; i++) {
         Body *body = lvl->bodies + i;
         Overlap overlap = fog_physics_check_overlap(&car->body, body);
         fog_physics_solve(overlap);
+    }
+
+    // Update checkpoints
+    {
+        Vec2 cp = lvl->checkpoints[car->next_checkpoint];
+        Vec2 norm = fog_sub_v2(car->body.position, cp);
+        Vec2 d = lvl->checkpoints_dir[car->next_checkpoint];
+        b8 passed = fog_dot_v2(norm, d) > 0;
+        b8 forward = fog_dot_v2(car->body.velocity, d) > 0;
+        if (passed && forward) {
+            if (car->next_checkpoint == 0) {
+                car->current_lap++;
+            }
+            car->next_checkpoint++;
+            car->next_checkpoint %= lvl->num_checkpoints;
+        }
     }
 
 #define car_debug_vec(v, o, c)                                                \

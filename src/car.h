@@ -14,6 +14,9 @@ typedef struct Car {
     f32 acceleration;
 
     f32 wheel_friction_static;
+
+    u32 next_checkpoint;
+    u32 current_lap;
 } Car;
 
 
