@@ -24,7 +24,7 @@ static f32 angle_func(f32 t) {
 #else
 // These give you more straights
 static f32 distance_func(f32 t, f32 noise) {
-    return cos(noise * t) + sin(noise * 0.333 * t) + 5.0;
+    return cos(noise * t) + sin(noise * 0.333 * t) + 10.0;
 }
 
 static f32 angle_func(f32 t) {

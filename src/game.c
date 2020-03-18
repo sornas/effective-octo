@@ -7,8 +7,6 @@
 #include "car.h"
 #include "level.h"
 
-u32 num_bodies = 4;
-Body *bodies;
 Car car;
 
 AssetID CAR_SPRITES[NUM_CAR_SPRTIES] = {};
@@ -30,10 +28,10 @@ ShapeID square;
 void build_level() {
     static f32 noise = 2.0;
     static f32 offset = 0.2;
-    static f32 smoothness = 3.0;
-    static f32 width = 0.4;
-    static f32 spacing = 0.10;
-    static f32 border_width = 0.1;
+    static f32 smoothness = 8.0;
+    static f32 width = 1.4;
+    static f32 spacing = 0.3;
+    static f32 border_width = 0.5;
     bool change = false;
 
     if (!level_exists) {
@@ -64,20 +62,16 @@ void build_level() {
                             square);
     }
     fog_util_end_tweak_section(&track_parameters);
-    level_draw(&lvl);
 }
 
 void update() {
-    update_car(&car, fog_logic_delta());
-    fog_renderer_fetch_camera(0)->position = fog_add_v2(car.body.position, fog_mul_v2(car.body.velocity, 0.01));
     build_level();
+    update_car(&car, &lvl, fog_logic_delta());
+    fog_renderer_fetch_camera(0)->position = fog_add_v2(car.body.position, fog_mul_v2(car.body.velocity, 0.01));
 }
 
 void draw() {
     draw_car(&car);
-    for (u32 i = 0; i < num_bodies; i++) {
-        fog_physics_debug_draw_body(&bodies[i]);
-    }
     static f32 angle = 0;
     fog_util_tweak_f32("angle", &angle, 0.1);
     fog_renderer_push_sprite(0, fetch_car_sprite(angle), fog_V2(0, 0), fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
@@ -90,6 +84,8 @@ void draw() {
                              fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
     fog_renderer_push_sprite(0, PINE_SPRITES[2], fog_random_unit_vec2(),
                              fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
+
+    level_draw(&lvl);
 }
 
 int main(int argc, char **argv) {
@@ -125,12 +121,8 @@ int main(int argc, char **argv) {
     fog_renderer_set_window_size(800, 800);
     fog_renderer_fetch_camera(0)->zoom = 1.0 / 5.0;
 
-    bodies = malloc(sizeof(Body) * num_bodies);
-    for (u32 i = 0; i < num_bodies; i++) {
-        bodies[i] = fog_physics_create_body(car_shape, 0, 0.0, 0.0);
-        bodies[i].position = fog_random_unit_vec2();
-        bodies[i].scale = fog_random_unit_vec2();
-    }
+    build_level();
+    car.body.position = lvl.checkpoints[0];
 
     fog_run(update, draw);
 

@@ -25,7 +25,7 @@ typedef struct {
     Vec2 *left_edges;
 } LevelBlueprint;
 
-typedef struct {
+typedef struct Level {
     u32 num_checkpoints;
     Vec2 *checkpoints;
 

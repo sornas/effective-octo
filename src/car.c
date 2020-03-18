@@ -1,4 +1,5 @@
 #include "car.h"
+#include "level.h"
 #include <math.h>
 
 #define PI 3.1416
@@ -55,7 +56,7 @@ Car create_car(Player player) {
     return car;
 }
 
-void update_car(Car *car, f32 delta) {
+void update_car(Car *car, struct Level *lvl, f32 delta) {
     if (fog_input_down(NAME(FORWARD), car->player)) {
         car->body.acceleration = fog_V2(car->acceleration * cos(car->body.rotation),
                                         car->acceleration * sin(car->body.rotation));
@@ -137,8 +138,10 @@ void update_car(Car *car, f32 delta) {
     car->body.acceleration = fog_add_v2(car->body.acceleration, friction);
 
     fog_physics_integrate(&car->body, delta);
-    for (u32 i = 0; i < num_bodies; i++) {
-        fog_physics_solve(fog_physics_check_overlap(&car->body, &bodies[i]));
+    for (u32 i = 0; i < lvl->num_bodies; i++) {
+        Body *body = lvl->bodies + i;
+        Overlap overlap = fog_physics_check_overlap(&car->body, body);
+        fog_physics_solve(overlap);
     }
 
 #define car_debug_vec(v, o, c)                                                \

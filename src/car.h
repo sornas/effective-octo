@@ -16,13 +16,15 @@ typedef struct {
     f32 wheel_friction_static;
 } Car;
 
+
 ///
 // Create a new car.
 Car create_car(Player player);
 
+struct Level;
 ///
 // Update the car one step in the time.
-void update_car(Car *car, f32 delta);
+void update_car(Car *car, struct Level *lvl, f32 delta);
 
 ///
 // Draw the car.
