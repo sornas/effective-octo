@@ -3,9 +3,16 @@
 ShapeID car_shape;
 AssetID car_sprite;
 
+#define NUM_CAR_SPRITES 16
+extern AssetID CAR_SPRITES[NUM_CAR_SPRITES];
+
+AssetID fetch_car_sprite(f32 angle);
+
 typedef struct Car {
     Player player;
     Body body;
+
+    ParticleSystem exhaust_particles;
 
     f32 wheel_turn_max;
     f32 wheel_turn_speed;

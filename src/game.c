@@ -9,14 +9,7 @@
 
 Car car;
 
-AssetID CAR_SPRITES[NUM_CAR_SPRTIES] = {};
 AssetID PINE_SPRITES[NUM_PINE_SPRITES] = {};
-
-AssetID fetch_car_sprite(f32 angle) {
-    const f32 spacing = 2 * 3.1415 / NUM_CAR_SPRTIES;
-    s32 index = (s32) (angle / spacing);
-    return CAR_SPRITES[(index + NUM_CAR_SPRTIES / 2) % NUM_CAR_SPRTIES];
-}
 
 LevelSketch lvl_sketch = {};
 LevelBlueprint lvl_bp = {};
@@ -69,10 +62,6 @@ void update() {
 
 void draw() {
     draw_car(&car);
-    static f32 angle = 0;
-    fog_util_tweak_f32("angle", &angle, 0.1);
-    fog_renderer_push_sprite(0, fetch_car_sprite(angle), fog_V2(0, 0), fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
-
 
     fog_random_seed(0);
     fog_renderer_push_sprite(0, PINE_SPRITES[0], fog_random_unit_vec2(),
@@ -96,11 +85,10 @@ int main(int argc, char **argv) {
     fog_input_add(fog_key_to_input_code(SDLK_d), NAME(RIGHT), P1);
     fog_input_add(fog_key_to_input_code(SDLK_w), NAME(FORWARD), P1);
     fog_input_add(fog_key_to_input_code(SDLK_s), NAME(BACKWARD), P1);
-
-    car_sprite = fog_asset_fetch_id("CAR_SPRITE");
+    fog_input_add(fog_key_to_input_code(SDLK_SPACE), NAME(DRIFT), P1);
 
     char str[100] = {};
-    for (u32 i = 0; i < NUM_CAR_SPRTIES; i++) {
+    for (u32 i = 0; i < NUM_CAR_SPRITES; i++) {
         sprintf(str, "CAR%d", i);
         CAR_SPRITES[i] = fog_asset_fetch_id(str);
     }
@@ -110,9 +98,10 @@ int main(int argc, char **argv) {
         PINE_SPRITES[i] = fog_asset_fetch_id(str);
     }
 
+    car_sprite = fog_asset_fetch_id("CAR_SPRITE");
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
-
     square = car_shape;
+
     car = create_car(P1);
 
     fog_renderer_set_window_size(800, 800);
