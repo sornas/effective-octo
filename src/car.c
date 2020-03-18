@@ -60,8 +60,10 @@ Car create_car(Player player) {
         .body = fog_physics_create_body(car_shape, 1.0, 0.0, 0.0),
 
         .exhaust_particles = create_exhaust_particles(),
+        .drift_particles = create_drift_particles(),
 
-        .exhaust_spawn_prob = 0.1,
+        .exhaust_spawn_prob = 0.2,
+        .drift_spawn_prob = 0.8,
 
         .wheel_turn_max = PI / 4,
         .wheel_turn_speed = 2,
@@ -82,7 +84,7 @@ void update_car(Car *car, f32 delta) {
         car->body.acceleration = fog_V2(car->acceleration * cos(car->body.rotation),
                                         car->acceleration * sin(car->body.rotation));
         if (fog_random_real(0, 1) < car->exhaust_spawn_prob) {
-            car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/4, car->body.rotation + PI + PI/4 };
+            car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/6, car->body.rotation + PI + PI/6 };
             fog_renderer_particle_spawn(&car->exhaust_particles, 1);
         }
     } else if (fog_input_down(NAME(BACKWARD), car->player)) {
@@ -162,14 +164,24 @@ void update_car(Car *car, f32 delta) {
 
     car->body.acceleration = fog_add_v2(car->body.acceleration, friction);
 
+    if (fog_input_down(NAME(DRIFT), car->player)) {
+        car->drift_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/6, car->body.rotation + PI + PI/6 };
+        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25, -0.2), car->body.rotation));
+        fog_renderer_particle_spawn(&car->drift_particles, 1);
+        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25,  0.2), car->body.rotation));
+        fog_renderer_particle_spawn(&car->drift_particles, 1);
+    }
+
     fog_physics_integrate(&car->body, delta);
     for (u32 i = 0; i < num_bodies; i++) {
         fog_physics_solve(fog_physics_check_overlap(&car->body, &bodies[i]));
     }
 
     car->exhaust_particles.position = car->body.position;
+    car->drift_particles.position = car->body.position;
     fog_util_tweak_vec2("exhaust position", &car->exhaust_particles.position, 1);
     fog_renderer_particle_update(&car->exhaust_particles, delta);
+    fog_renderer_particle_update(&car->drift_particles, delta);
 
 #define car_debug_vec(v, o, c)                                                \
     fog_renderer_push_line(                                                   \
@@ -179,20 +191,20 @@ void update_car(Car *car, f32 delta) {
 #define world_debug_vec(v, o, c)                                              \
     fog_renderer_push_line(1, o, fog_add_v2(o, v), c, 0.02)
 
-    car_debug_vec(car_dir, fog_V2(0, 0), fog_V4(0, 1, 0, 1));
-    car_debug_vec(fric_total, fog_V2(0, 0), fog_V4(1, 0, 0, 1));
+    //car_debug_vec(car_dir, fog_V2(0, 0), fog_V4(0, 1, 0, 1));
+    //car_debug_vec(fric_total, fog_V2(0, 0), fog_V4(1, 0, 0, 1));
 
-    Vec2 f = fog_mul_v2(car_dir, car_length);
-    car_debug_vec(front_normal, f, fog_V4(1, 0, 0, 1));
-    car_debug_vec(fog_neg_v2(front_normal), f, fog_V4(1, 0, 0, 1));
-    car_debug_vec(front_fric, f, fog_V4(1, 0, 1, 1));
+    //Vec2 f = fog_mul_v2(car_dir, car_length);
+    //car_debug_vec(front_normal, f, fog_V4(1, 0, 0, 1));
+    //car_debug_vec(fog_neg_v2(front_normal), f, fog_V4(1, 0, 0, 1));
+    //car_debug_vec(front_fric, f, fog_V4(1, 0, 1, 1));
 
-    Vec2 b = fog_mul_v2(fog_neg_v2(car_dir), car_length);
-    car_debug_vec(back_normal, b, fog_V4(1, 0, 0, 1));
-    car_debug_vec(fog_neg_v2(back_normal), b, fog_V4(1, 0, 0, 1));
-    car_debug_vec(back_fric, b, fog_V4(1, 1, 0, 1));
-    
-    world_debug_vec(car->exhaust_particles.position, fog_V2(0, 0), fog_V4(0, 0, 0, 1));
+    //Vec2 b = fog_mul_v2(fog_neg_v2(car_dir), car_length);
+    //car_debug_vec(back_normal, b, fog_V4(1, 0, 0, 1));
+    //car_debug_vec(fog_neg_v2(back_normal), b, fog_V4(1, 0, 0, 1));
+    //car_debug_vec(back_fric, b, fog_V4(1, 1, 0, 1));
+    //
+    //world_debug_vec(car->exhaust_particles.position, fog_V2(0, 0), fog_V4(0, 0, 0, 1));
 }
 
 void draw_car(Car *car) {
@@ -200,5 +212,6 @@ void draw_car(Car *car) {
     fog_renderer_push_sprite(0, fetch_car_sprite(car->body.rotation + car->wheel_turn/4), car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
 
     fog_renderer_particle_draw(&car->exhaust_particles);
+    fog_renderer_particle_draw(&car->drift_particles);
 }
 

@@ -13,8 +13,10 @@ typedef struct {
     Body body;
 
     ParticleSystem exhaust_particles;
+    ParticleSystem drift_particles;
 
     f32 exhaust_spawn_prob;
+    f32 drift_spawn_prob;
 
     f32 wheel_turn_max;
     f32 wheel_turn_speed;
