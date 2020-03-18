@@ -14,6 +14,8 @@ typedef struct {
 
     ParticleSystem exhaust_particles;
 
+    f32 exhaust_spawn_prob;
+
     f32 wheel_turn_max;
     f32 wheel_turn_speed;
     f32 wheel_turn;

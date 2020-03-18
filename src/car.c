@@ -59,6 +59,8 @@ Car create_car(Player player) {
 
         .exhaust_particles = fog_renderer_create_particle_system(0, 500, fog_V2(0, 0)),
 
+        .exhaust_spawn_prob = 0.1,
+
         .wheel_turn_max = PI / 4,
         .wheel_turn_speed = 2,
         .wheel_turn = 0,
@@ -92,8 +94,10 @@ void update_car(Car *car, f32 delta) {
     if (fog_input_down(NAME(FORWARD), car->player)) {
         car->body.acceleration = fog_V2(car->acceleration * cos(car->body.rotation),
                                         car->acceleration * sin(car->body.rotation));
-        car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI, car->body.rotation + PI };
-        fog_renderer_particle_spawn(&car->exhaust_particles, 1);
+        if (fog_random_real(0, 1) < car->exhaust_spawn_prob) {
+            car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/4, car->body.rotation + PI + PI/4 };
+            fog_renderer_particle_spawn(&car->exhaust_particles, 1);
+        }
     } else if (fog_input_down(NAME(BACKWARD), car->player)) {
         car->body.acceleration = fog_V2(-car->acceleration * cos(car->body.rotation),
                                         -car->acceleration * sin(car->body.rotation));

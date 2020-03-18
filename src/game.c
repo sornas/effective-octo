@@ -72,13 +72,13 @@ void draw() {
         fog_physics_debug_draw_body(&bodies[i]);
     }
 
-    fog_random_seed(0);
-    fog_renderer_push_sprite(0, PINE_SPRITES[0], fog_random_unit_vec2(),
-                             fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
-    fog_renderer_push_sprite(0, PINE_SPRITES[1], fog_random_unit_vec2(),
-                             fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
-    fog_renderer_push_sprite(0, PINE_SPRITES[2], fog_random_unit_vec2(),
-                             fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
+    //fog_random_seed(0);
+    //fog_renderer_push_sprite(0, PINE_SPRITES[0], fog_random_unit_vec2(),
+    //                         fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
+    //fog_renderer_push_sprite(0, PINE_SPRITES[1], fog_random_unit_vec2(),
+    //                         fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
+    //fog_renderer_push_sprite(0, PINE_SPRITES[2], fog_random_unit_vec2(),
+    //                         fog_V2(1, 1), 0, fog_V4(1, 1, 1, 1));
 }
 
 int main(int argc, char **argv) {
