@@ -2,6 +2,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "particles.h"
+
 AssetID CAR_SPRITES[NUM_CAR_SPRITES] = {};
 
 #define PI 3.1416
@@ -57,7 +59,7 @@ Car create_car(Player player) {
         .player = player,
         .body = fog_physics_create_body(car_shape, 1.0, 0.0, 0.0),
 
-        .exhaust_particles = fog_renderer_create_particle_system(0, 500, fog_V2(0, 0)),
+        .exhaust_particles = create_exhaust_particles(),
 
         .exhaust_spawn_prob = 0.1,
 
@@ -72,21 +74,6 @@ Car create_car(Player player) {
     car.body.scale = fog_V2(0.5, 0.5);
     car.body.damping = 0.3;
 
-    car.exhaust_particles.one_color = 1;
-    car.exhaust_particles.one_alpha = 0;
-    car.exhaust_particles.one_size = 0;
-    car.exhaust_particles.alive_time = (Span) { 1, 1 };
-    car.exhaust_particles.position_x = (Span) { 0, 0 };
-    car.exhaust_particles.position_y = (Span) { 0, 0 };
-    car.exhaust_particles.velocity = (Span) { 1, 1 };
-    car.exhaust_particles.acceleration = (Span) { 0, 0 };
-    car.exhaust_particles.spawn_size = (Span) { 0, 0 };
-    car.exhaust_particles.spawn_red = (Span) { 0, 0 };
-    car.exhaust_particles.spawn_green = (Span) { 0, 0 };
-    car.exhaust_particles.spawn_blue = (Span) { 0, 0 };
-    car.exhaust_particles.spawn_alpha = (Span) { 0.8, 1 };
-    car.exhaust_particles.die_size = (Span) { 0.5, 1 };
-    car.exhaust_particles.die_alpha = (Span) { 0, 0 };
     return car;
 }
 
