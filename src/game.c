@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
     fog_renderer_fetch_camera(0)->zoom = 1.0 / 5.0;
 
     build_level();
-    car.body.position = lvl.checkpoints[0];
+    level_place(&lvl, &car);
 
     fog_run(update, draw);
 

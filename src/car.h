@@ -3,7 +3,7 @@
 ShapeID car_shape;
 AssetID car_sprite;
 
-typedef struct {
+typedef struct Car {
     Player player;
     Body body;
 
