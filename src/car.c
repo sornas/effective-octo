@@ -117,9 +117,9 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 
     if (fog_input_down(NAME(DRIFT), car->player)) {
         car->drift_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/6, car->body.rotation + PI + PI/6 };
-        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25,  0.2), car->body.rotation));  // left
+        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.22, -0.15), car->body.rotation));
         fog_renderer_particle_spawn(&car->drift_particles, 1);
-        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25, -0.2), car->body.rotation));  // right
+        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.22,  0.15), car->body.rotation));
         fog_renderer_particle_spawn(&car->drift_particles, 1);
 
         f32 rotation = snap_rotation(car->body.rotation, NUM_CAR_SPRITES);
