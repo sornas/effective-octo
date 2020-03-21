@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include "level.h"
+#include "car.h"
 #include "math.h"
 
 #define PI 3.1415
@@ -24,7 +25,7 @@ static f32 angle_func(f32 t) {
 #else
 // These give you more straights
 static f32 distance_func(f32 t, f32 noise) {
-    return cos(noise * t) + sin(noise * 0.333 * t) + 5.0;
+    return cos(noise * t) + sin(noise * 0.333 * t) + 10.0;
 }
 
 static f32 angle_func(f32 t) {
@@ -91,6 +92,7 @@ LevelBlueprint level_expand_sketch(LevelSketch *sketch, f32 width, f32 spacing,
         .border_width = border_width,
         .num_checkpoints = sketch->num_points,
         .checkpoints = malloc(sketch->num_points * sizeof(Vec2)),
+        .checkpoints_dir = malloc(sketch->num_points * sizeof(Vec2)),
         .num_track_points = 0,
         .points = malloc(maximum_num_points * sizeof(Vec2)),
         .num_right_edges = 0,
@@ -101,6 +103,7 @@ LevelBlueprint level_expand_sketch(LevelSketch *sketch, f32 width, f32 spacing,
 
     for (u32 i = 0; i < sketch->num_points; i++) {
         bp.checkpoints[i] = sketch->points[i];
+        bp.checkpoints_dir[i] = sketch->directions[i];
     }
 
     for (u32 i = 0; i < sketch->num_points; i++) {
@@ -196,6 +199,7 @@ void level_clear_blueprint(LevelBlueprint *bp) {
     bp->num_left_edges = 0;
     if (bp->checkpoints) {
         free(bp->checkpoints);
+        free(bp->checkpoints_dir);
     }
     if (bp->points) {
         free(bp->points);
@@ -244,8 +248,6 @@ Level level_expand(LevelBlueprint *bp, ShapeID shape) {
         Vec2 b = bp->left_edges[j];
         Body body = fog_physics_create_body(shape, 0, 0.0, 0.0);
         body.position = fog_mul_v2(fog_add_v2(a, b), 0.5);
-        // TODO(ed): This minus sign shouldn't be here. The engine is
-        // wrong, and it's the body rotation that is wrong.
         body.rotation = fog_angle_v2(fog_sub_v2(b, a));
         body.scale.y = bp->border_width;
         body.scale.x = fog_distance_v2(a, b);
@@ -259,8 +261,6 @@ Level level_expand(LevelBlueprint *bp, ShapeID shape) {
         Vec2 b = bp->right_edges[j];
         Body body = fog_physics_create_body(shape, 0, 0.0, 0.0);
         body.position = fog_mul_v2(fog_add_v2(a, b), 0.5);
-        // TODO(ed): This minus sign shouldn't be here. The engine is
-        // wrong, and it's the body rotation that is wrong.
         body.rotation = fog_angle_v2(fog_sub_v2(b, a));
         body.scale.y = bp->border_width;
         body.scale.x = fog_distance_v2(a, b);
@@ -271,6 +271,7 @@ Level level_expand(LevelBlueprint *bp, ShapeID shape) {
     Level level = {
         .num_checkpoints = bp->num_checkpoints,
         .checkpoints = malloc(bp->num_checkpoints * sizeof(Body)),
+        .checkpoints_dir = malloc(bp->num_checkpoints * sizeof(Body)),
 
         .num_bodies = num_bodies,
         .bodies = bodies,
@@ -278,6 +279,7 @@ Level level_expand(LevelBlueprint *bp, ShapeID shape) {
 
     for (u32 i = 0; i < bp->num_checkpoints; i++) {
         level.checkpoints[i] = bp->checkpoints[i];
+        level.checkpoints_dir[i] = bp->checkpoints_dir[i];
     }
 
     return level;
@@ -289,8 +291,19 @@ void level_draw(Level *level) {
     }
 
     for (u32 i = 0; i < level->num_checkpoints; i++) {
-        fog_renderer_push_point(0, level->checkpoints[i], fog_V4(0, 1, 0, 1), 0.2);
+        Vec2 p = level->checkpoints[i];
+        Vec2 d = level->checkpoints_dir[i];
+        fog_renderer_push_point(0, p, fog_V4(0, 1, 0, 1), 0.1);
+        fog_renderer_push_line(0, p, fog_add_v2(p, d), fog_V4(0, 1, 0, 1), 0.1);
     }
+}
+
+void level_place(Level *level, struct Car *car) {
+    Vec2 p = level->checkpoints[0];
+    Vec2 d = level->checkpoints_dir[0];
+    f32 angle = fog_angle_v2(d);
+    car->body.position = p;
+    car->body.rotation = angle;
 }
 
 void level_clear(Level *level) {

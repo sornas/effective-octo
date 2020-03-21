@@ -8,7 +8,7 @@ extern AssetID CAR_SPRITES[NUM_CAR_SPRITES];
 
 AssetID fetch_car_sprite(f32 angle);
 
-typedef struct {
+typedef struct Car {
     Player player;
     Body body;
 
@@ -25,15 +25,20 @@ typedef struct {
     f32 acceleration;
 
     f32 wheel_friction_static;
+
+    u32 next_checkpoint;
+    u32 current_lap;
 } Car;
+
 
 ///
 // Create a new car.
 Car create_car(Player player);
 
+struct Level;
 ///
 // Update the car one step in the time.
-void update_car(Car *car, f32 delta);
+void update_car(Car *car, struct Level *lvl, f32 delta);
 
 ///
 // Draw the car.

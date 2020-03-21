@@ -14,8 +14,8 @@ typedef struct {
     f32 border_width;
 
     u32 num_checkpoints;
-    // TODO(ed): Store forward here, to make sure you can't reverse over it.
     Vec2 *checkpoints;
+    Vec2 *checkpoints_dir;
 
     u32 num_track_points;
     Vec2 *points;
@@ -25,9 +25,10 @@ typedef struct {
     Vec2 *left_edges;
 } LevelBlueprint;
 
-typedef struct {
+typedef struct Level {
     u32 num_checkpoints;
     Vec2 *checkpoints;
+    Vec2 *checkpoints_dir;
 
     u32 num_bodies;
     Body *bodies;
@@ -49,6 +50,10 @@ void level_clear_blueprint(LevelBlueprint *bp);
 Level level_expand(LevelBlueprint *level, ShapeID shape);
 void level_draw(Level *level);
 void level_clear(Level *level);
+
+struct Car;
+// Places the car on the track
+void level_place(Level *level, struct Car *car);
 
 // Generate a level from start to finish
 Level level_gen(f32 noise, f32 offset, f32 smoothness, f32 width, f32 spacing, f32 border_width, ShapeID shape);

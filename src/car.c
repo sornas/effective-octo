@@ -1,10 +1,13 @@
 #include "car.h"
+#include "level.h"
 #include <math.h>
 #include <stdio.h>
 
 #include "particles.h"
 
 AssetID CAR_SPRITES[NUM_CAR_SPRITES] = {};
+
+#include <stdio.h>
 
 #define PI 3.1416
 
@@ -72,14 +75,18 @@ Car create_car(Player player) {
         .acceleration = 3,
 
         .wheel_friction_static = 1,
+
+        .next_checkpoint = 1, // So we don't go into the goal on the first lap.
+        .current_lap = 0,
     };
     car.body.scale = fog_V2(0.5, 0.5);
-    car.body.damping = 0.3;
+    car.body.damping = 0.5;
 
     return car;
 }
 
-void update_car(Car *car, f32 delta) {
+void update_car(Car *car, struct Level *lvl, f32 delta) {
+#if 0
     if (fog_input_down(NAME(FORWARD), car->player)) {
         car->body.acceleration = fog_V2(car->acceleration * cos(car->body.rotation),
                                         car->acceleration * sin(car->body.rotation));
@@ -126,6 +133,8 @@ void update_car(Car *car, f32 delta) {
 
         fog_util_tweak_f32("max back", &max_friction_back, 0.1);
         fog_util_tweak_f32("grip back", &grip_constant_back, 0.1);
+
+        fog_util_tweak_u32_r("current lap", car->current_lap);
     }
     fog_util_end_tweak_section(&car_parameters);
 
@@ -163,6 +172,20 @@ void update_car(Car *car, f32 delta) {
     car->body.acceleration = fog_add_v2(car->body.acceleration, vel_comp);
 
     car->body.acceleration = fog_add_v2(car->body.acceleration, friction);
+#endif
+    if (fog_input_down(NAME(LEFT), car->player)) {
+        car->wheel_turn = min_f32(car->wheel_turn + (car->wheel_turn_speed * delta),
+                                  car->wheel_turn_max);
+    } else if (fog_input_down(NAME(RIGHT), car->player)) {
+        car->wheel_turn = max_f32(car->wheel_turn - (car->wheel_turn_speed * delta),
+                                  -car->wheel_turn_max);
+    } else {
+        f32 max = car->wheel_turn_speed * delta;
+        if (abs_f32(car->wheel_turn) < max)
+            car->wheel_turn = 0;
+        else
+            car->wheel_turn -= sign_f32(car->wheel_turn) * max;
+    }
 
     if (fog_input_down(NAME(DRIFT), car->player)) {
         car->drift_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/6, car->body.rotation + PI + PI/6 };
@@ -172,9 +195,53 @@ void update_car(Car *car, f32 delta) {
         fog_renderer_particle_spawn(&car->drift_particles, 1);
     }
 
+    Vec2 forward = fog_V2(cos(car->body.rotation), sin(car->body.rotation));
+    Vec2 acceleration = fog_V2(0, 0);
+    f32 dacc = car->acceleration;
+    if (fog_input_down(NAME(FORWARD), car->player)) {
+        acceleration = fog_mul_v2(forward, dacc);
+        car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI, car->body.rotation + PI };
+        fog_renderer_particle_spawn(&car->exhaust_particles, 1);
+    } else if (fog_input_down(NAME(BACKWARD), car->player)) {
+        acceleration = fog_mul_v2(forward, -dacc);
+    }
+    Vec2 vel = fog_add_v2(car->body.velocity, fog_mul_v2(acceleration, delta));
+    f32 turn = car->wheel_turn * delta * fog_dot_v2(forward, vel);
+    f32 rotation = car->body.rotation + turn;
+
+    const f32 MAX_ROTATION = 2.0;
+    f32 rot_mag = min_f32(fog_dot_v2(forward, vel), MAX_ROTATION);
+    vel = fog_sub_v2(vel, fog_mul_v2(forward, rot_mag));
+    Vec2 new_forward = fog_V2(cos(rotation), sin(rotation));
+    vel = fog_add_v2(vel, fog_mul_v2(new_forward, rot_mag));
+
+    fog_util_tweak_f32_r("rot_mag", rot_mag);
+    fog_util_tweak_f32_r("max_rot", MAX_ROTATION);
+
+    car->body.rotation = rotation;
+    car->body.velocity = vel;
+    // Collisions
     fog_physics_integrate(&car->body, delta);
-    for (u32 i = 0; i < num_bodies; i++) {
-        fog_physics_solve(fog_physics_check_overlap(&car->body, &bodies[i]));
+    for (u32 i = 0; i < lvl->num_bodies; i++) {
+        Body *body = lvl->bodies + i;
+        Overlap overlap = fog_physics_check_overlap(&car->body, body);
+        fog_physics_solve(overlap);
+    }
+
+    // Update checkpoints
+    {
+        Vec2 cp = lvl->checkpoints[car->next_checkpoint];
+        Vec2 norm = fog_sub_v2(car->body.position, cp);
+        Vec2 d = lvl->checkpoints_dir[car->next_checkpoint];
+        b8 passed = fog_dot_v2(norm, d) > 0;
+        b8 forward = fog_dot_v2(car->body.velocity, d) > 0;
+        if (passed && forward) {
+            if (car->next_checkpoint == 0) {
+                car->current_lap++;
+            }
+            car->next_checkpoint++;
+            car->next_checkpoint %= lvl->num_checkpoints;
+        }
     }
 
     car->exhaust_particles.position = car->body.position;
@@ -209,7 +276,8 @@ void update_car(Car *car, f32 delta) {
 
 void draw_car(Car *car) {
     fog_physics_debug_draw_body(&car->body);
-    fog_renderer_push_sprite(0, fetch_car_sprite(car->body.rotation + car->wheel_turn/4), car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
+    AssetID sprite = fetch_car_sprite(car->body.rotation + car->wheel_turn / 4.0);
+    fog_renderer_push_sprite(0, sprite, car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
 
     fog_renderer_particle_draw(&car->exhaust_particles);
     fog_renderer_particle_draw(&car->drift_particles);
