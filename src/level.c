@@ -275,6 +275,8 @@ Level level_expand(LevelBlueprint *bp, ShapeID shape) {
 
         .num_bodies = num_bodies,
         .bodies = bodies,
+
+        .width = bp->width,
     };
 
     for (u32 i = 0; i < bp->num_checkpoints; i++) {
@@ -302,8 +304,18 @@ void level_place(Level *level, struct Car *car) {
     Vec2 p = level->checkpoints[0];
     Vec2 d = level->checkpoints_dir[0];
     f32 angle = fog_angle_v2(d);
-    car->body.position = p;
     car->body.rotation = angle;
+
+    switch (car->player) {
+    case P1:
+        car->body.position = fog_add_v2(p, fog_rotate_v2(fog_mul_v2(fog_V2(-level->width, 0), 0.25), angle - PI/2));
+        break;
+    case P2:
+        car->body.position = fog_add_v2(p, fog_rotate_v2(fog_mul_v2(fog_V2(level->width, 0), 0.25), angle - PI/2));
+        break;
+    default:
+        break;
+    }
 }
 
 void level_clear(Level *level) {

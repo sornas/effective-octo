@@ -215,9 +215,6 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
     Vec2 new_forward = fog_V2(cos(rotation), sin(rotation));
     vel = fog_add_v2(vel, fog_mul_v2(new_forward, rot_mag));
 
-    fog_util_tweak_f32_r("rot_mag", rot_mag);
-    fog_util_tweak_f32_r("max_rot", MAX_ROTATION);
-
     car->body.rotation = rotation;
     car->body.velocity = vel;
     // Collisions
@@ -246,7 +243,6 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 
     car->exhaust_particles.position = car->body.position;
     car->drift_particles.position = car->body.position;
-    fog_util_tweak_vec2("exhaust position", &car->exhaust_particles.position, 1);
     fog_renderer_particle_update(&car->exhaust_particles, delta);
     fog_renderer_particle_update(&car->drift_particles, delta);
 

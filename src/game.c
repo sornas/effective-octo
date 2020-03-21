@@ -49,7 +49,7 @@ void build_level() {
         lvl = level_gen(noise, offset, smoothness, width, spacing,
                 border_width, square);
         level_place(&lvl, &car1);
-        level_place(&lvl, &car2);  //TODO
+        level_place(&lvl, &car2);
         change = false;
     }
 
