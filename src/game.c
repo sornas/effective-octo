@@ -7,7 +7,8 @@
 #include "car.h"
 #include "level.h"
 
-Car car;
+Car car1;
+Car car2;
 
 AssetID PINE_SPRITES[NUM_PINE_SPRITES] = {};
 
@@ -47,7 +48,8 @@ void build_level() {
     if (change) {
         lvl = level_gen(noise, offset, smoothness, width, spacing,
                 border_width, square);
-        level_place(&lvl, &car);
+        level_place(&lvl, &car1);
+        level_place(&lvl, &car2);  //TODO
         change = false;
     }
 
@@ -56,12 +58,14 @@ void build_level() {
 
 void update() {
     build_level();
-    update_car(&car, &lvl, fog_logic_delta());
-    fog_renderer_fetch_camera(0)->position = fog_add_v2(car.body.position, fog_mul_v2(car.body.velocity, 0.01));
+    update_car(&car1, &lvl, fog_logic_delta());
+    update_car(&car2, &lvl, fog_logic_delta());
+    fog_renderer_fetch_camera(0)->position = fog_add_v2(car1.body.position, fog_mul_v2(car1.body.velocity, 0.01));  //TODO
 }
 
 void draw() {
-    draw_car(&car);
+    draw_car(&car1);
+    draw_car(&car2);
 
     //fog_random_seed(0);
     //fog_renderer_push_sprite(0, PINE_SPRITES[0], fog_random_unit_vec2(),
@@ -86,6 +90,10 @@ int main(int argc, char **argv) {
     fog_input_add(fog_key_to_input_code(SDLK_w), NAME(FORWARD), P1);
     fog_input_add(fog_key_to_input_code(SDLK_s), NAME(BACKWARD), P1);
     fog_input_add(fog_key_to_input_code(SDLK_SPACE), NAME(DRIFT), P1);
+    fog_input_add(fog_key_to_input_code(SDLK_j), NAME(LEFT), P2);
+    fog_input_add(fog_key_to_input_code(SDLK_l), NAME(RIGHT), P2);
+    fog_input_add(fog_key_to_input_code(SDLK_i), NAME(FORWARD), P2);
+    fog_input_add(fog_key_to_input_code(SDLK_k), NAME(BACKWARD), P2);
 
     char str[100] = {};
     for (u32 i = 0; i < NUM_CAR_SPRITES; i++) {
@@ -102,7 +110,8 @@ int main(int argc, char **argv) {
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
     square = car_shape;
 
-    car = create_car(P1);
+    car1 = create_car(P1);
+    car2 = create_car(P2);
 
     fog_renderer_set_window_size(800, 800);
     fog_renderer_fetch_camera(0)->zoom = 1.0 / 5.0;
