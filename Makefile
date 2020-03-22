@@ -7,6 +7,7 @@ WARNINGS = -Werror -Wall
 FLAGS = $(WARNINGS) -std=c11
 DEBUG_FLAGS = $(FLAGS) -ggdb -O0
 LIB_FOLDER = lib
+INC_FOLDER = inc
 ARCH = $(shell uname -s)
 
 ENGINE =
@@ -22,7 +23,7 @@ LIBS = -lfog -lSDL2 -lSDL2main -ldl -lpthread -lc -lm
 ifeq ($(ARCH),Darwin)
 	LIBS += -lc++
 endif
-INCLUDES = -Iinc
+INCLUDES = -I$(INC_FOLDER)
 
 ASSET_BUILDER = $(FOG_FOLDER)/out/mist
 ASSET_FILE = data.fog
@@ -63,21 +64,24 @@ $(ASSET_BUILDER): $(ENGINE)
 
 $(LIB_FOLDER):
 	@mkdir -p $@
+$(INC_FOLDER):
+	@mkdir -p $@
 
 update-engine:
 	@git submodule update --remote
 
-$(ENGINE): | $(LIB_FOLDER)
+$(ENGINE): | $(LIB_FOLDER) $(INC_FOLDER)
 	@echo "Compiling engine!"
 	make -C $(FOG_FOLDER) engine
 	@cp $(FOG_FOLDER)/out/libfog.* $(LIB_FOLDER)/
-	@mkdir -p inc
-	@cp $(FOG_FOLDER)/out/fog.h inc/
+	@mkdir -p $(INC_FOLDER)
+	@cp $(FOG_FOLDER)/out/fog.h $(INC_FOLDER)/
 
 clean:
 	@echo "Cleaning!"
 	make -C $(FOG_FOLDER) clean
 	rm -rf $(LIB_FOLDER)
+	rm -rf $(INC_FOLDER)
 	rm -f $(GAME)
 	rm -f $(ASSET_FILE)
 	rm -f *.o
