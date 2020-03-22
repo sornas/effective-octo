@@ -50,9 +50,20 @@ s32 mod_s32(s32 a, s32 b) {
     return ((a % b) + b) % b;
 }
 
+static inline
+s32 angle_to_steps(f32 angle, u32 steps) {
+    f32 spacing = 2 * 3.1415 / steps;
+    return (s32) round(angle / spacing);
+}
+
+static inline
+f32 snap_rotation(f32 angle, u32 steps) {
+    f32 spacing = 2 * 3.1415 / steps;
+    return angle_to_steps(angle, steps) * spacing;
+}
+
 AssetID fetch_car_sprite(f32 angle) {
-    const f32 spacing = 2 * 3.1415 / NUM_CAR_SPRITES;
-    s32 index = (s32) ((angle + spacing/2) / spacing);
+    s32 index = angle_to_steps(angle, NUM_CAR_SPRITES);
     return CAR_SPRITES[mod_s32(index + NUM_CAR_SPRITES / 2, NUM_CAR_SPRITES)];
 }
 
@@ -111,25 +122,26 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25, -0.2), car->body.rotation));  // right
         fog_renderer_particle_spawn(&car->drift_particles, 1);
 
+        f32 rotation = snap_rotation(car->body.rotation, NUM_CAR_SPRITES);
         // front left
         car->skidmark_particles[0].position =
             fog_add_v2(car->body.position,
-                    fog_rotate_v2(fog_V2(0.25, 0.15), car->body.rotation));
+                    fog_rotate_v2(fog_V2(0.25, 0.15), rotation));
         // front right
         car->skidmark_particles[1].position =
             fog_add_v2(car->body.position,
-                    fog_rotate_v2(fog_V2(0.25, -0.15), car->body.rotation));
+                    fog_rotate_v2(fog_V2(0.25, -0.15), rotation));
         // back right
         car->skidmark_particles[2].position =
             fog_add_v2(car->body.position,
-                    fog_rotate_v2(fog_V2(-0.25, -0.15), car->body.rotation));
+                    fog_rotate_v2(fog_V2(-0.25, -0.15), rotation));
         // back left
         car->skidmark_particles[3].position =
             fog_add_v2(car->body.position,
-                    fog_rotate_v2(fog_V2(-0.25, 0.15), car->body.rotation));
+                    fog_rotate_v2(fog_V2(-0.25, 0.15), rotation));
         
         for (u8 i = 0; i < 4; i++) {
-            car->skidmark_particles[i].rotation = (Span) { car->body.rotation, car->body.rotation };
+            car->skidmark_particles[i].rotation = (Span) { rotation, rotation };
             fog_renderer_particle_spawn(&car->skidmark_particles[i], 1);
         }
     }
@@ -213,7 +225,7 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 
 void draw_car(Car *car) {
     fog_physics_debug_draw_body(&car->body);
-    AssetID sprite = fetch_car_sprite(car->body.rotation + car->wheel_turn / 4.0);
+    AssetID sprite = fetch_car_sprite(car->body.rotation);
     fog_renderer_push_sprite(2, sprite, car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
 
     for (u8 i = 0; i < 4; i++)
