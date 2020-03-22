@@ -60,7 +60,16 @@ void update() {
     build_level();
     update_car(&car1, &lvl, fog_logic_delta());
     update_car(&car2, &lvl, fog_logic_delta());
-    fog_renderer_fetch_camera(0)->position = fog_add_v2(car1.body.position, fog_mul_v2(car1.body.velocity, 0.01));  //TODO
+
+    //TODO(gu) these should ideally not be hard-coded
+    fog_renderer_fetch_camera(0)->position = fog_add_v2(
+            fog_mul_v2(fog_V2(10, 0), fog_renderer_fetch_camera(0)->zoom),
+            fog_add_v2(car1.body.position,
+                       fog_mul_v2(car1.body.velocity, 0.01)));
+    fog_renderer_fetch_camera(1)->position = fog_add_v2(
+            fog_mul_v2(fog_V2(-10, 0), fog_renderer_fetch_camera(1)->zoom),
+            fog_add_v2(car2.body.position,
+                       fog_mul_v2(car2.body.velocity, 0.01)));
 }
 
 void draw() {
@@ -113,8 +122,11 @@ int main(int argc, char **argv) {
     car1 = create_car(P1);
     car2 = create_car(P2);
 
-    fog_renderer_set_window_size(800, 800);
+    fog_renderer_set_window_size(1200, 800);
+    fog_renderer_turn_on_camera(0);
+    fog_renderer_turn_on_camera(1);
     fog_renderer_fetch_camera(0)->zoom = 1.0 / 5.0;
+    fog_renderer_fetch_camera(1)->zoom = 1.0 / 5.0;
 
     fog_run(update, draw);
 
