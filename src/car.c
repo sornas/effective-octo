@@ -139,7 +139,7 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         car->skidmark_particles[3].position =
             fog_add_v2(car->body.position,
                     fog_rotate_v2(fog_V2(-0.25, 0.15), rotation));
-        
+
         for (u8 i = 0; i < 4; i++) {
             car->skidmark_particles[i].rotation = (Span) { rotation, rotation };
             fog_renderer_particle_spawn(&car->skidmark_particles[i], 1);
@@ -157,7 +157,7 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         acceleration = fog_mul_v2(forward, -dacc);
     }
     Vec2 vel = fog_add_v2(car->body.velocity, fog_mul_v2(acceleration, delta));
-    f32 turn = car->wheel_turn * delta * fog_dot_v2(forward, vel);
+    f32 turn = car->wheel_turn * delta * abs_f32(fog_dot_v2(forward, vel));
     f32 rotation = car->body.rotation + turn;
 
     const f32 MAX_ROTATION = 2.0;
