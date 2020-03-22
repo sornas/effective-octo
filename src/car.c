@@ -79,6 +79,10 @@ Car create_car(Player player) {
         .next_checkpoint = 1, // So we don't go into the goal on the first lap.
         .current_lap = 0,
     };
+
+    for (u8 i = 0; i < 4; i++)
+        car.skidmark_particles[i] = create_skidmark_particles();
+
     car.body.scale = fog_V2(0.5, 0.5);
     car.body.damping = 0.5;
 
@@ -102,10 +106,32 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 
     if (fog_input_down(NAME(DRIFT), car->player)) {
         car->drift_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/6, car->body.rotation + PI + PI/6 };
-        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25, -0.2), car->body.rotation));
+        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25,  0.2), car->body.rotation));  // left
         fog_renderer_particle_spawn(&car->drift_particles, 1);
-        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25,  0.2), car->body.rotation));
+        car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.25, -0.2), car->body.rotation));  // right
         fog_renderer_particle_spawn(&car->drift_particles, 1);
+
+        // front left
+        car->skidmark_particles[0].position =
+            fog_add_v2(car->body.position,
+                    fog_rotate_v2(fog_V2(0.25, 0.15), car->body.rotation));
+        // front right
+        car->skidmark_particles[1].position =
+            fog_add_v2(car->body.position,
+                    fog_rotate_v2(fog_V2(0.25, -0.15), car->body.rotation));
+        // back right
+        car->skidmark_particles[2].position =
+            fog_add_v2(car->body.position,
+                    fog_rotate_v2(fog_V2(-0.25, -0.15), car->body.rotation));
+        // back left
+        car->skidmark_particles[3].position =
+            fog_add_v2(car->body.position,
+                    fog_rotate_v2(fog_V2(-0.25, 0.15), car->body.rotation));
+        
+        for (u8 i = 0; i < 4; i++) {
+            car->skidmark_particles[i].rotation = (Span) { car->body.rotation, car->body.rotation };
+            fog_renderer_particle_spawn(&car->skidmark_particles[i], 1);
+        }
     }
 
     Vec2 forward = fog_V2(cos(car->body.rotation), sin(car->body.rotation));
@@ -156,6 +182,8 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 
     car->exhaust_particles.position = car->body.position;
     car->drift_particles.position = car->body.position;
+    for (u8 i = 0; i < 4; i++)
+        fog_renderer_particle_update(&car->skidmark_particles[i], delta);
     fog_renderer_particle_update(&car->exhaust_particles, delta);
     fog_renderer_particle_update(&car->drift_particles, delta);
 
@@ -186,8 +214,10 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 void draw_car(Car *car) {
     fog_physics_debug_draw_body(&car->body);
     AssetID sprite = fetch_car_sprite(car->body.rotation + car->wheel_turn / 4.0);
-    fog_renderer_push_sprite(0, sprite, car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
+    fog_renderer_push_sprite(2, sprite, car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
 
+    for (u8 i = 0; i < 4; i++)
+        fog_renderer_particle_draw(&car->skidmark_particles[i]);
     fog_renderer_particle_draw(&car->exhaust_particles);
     fog_renderer_particle_draw(&car->drift_particles);
 }

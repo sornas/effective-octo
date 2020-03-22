@@ -15,6 +15,8 @@ typedef struct Car {
     ParticleSystem exhaust_particles;
     ParticleSystem drift_particles;
 
+    ParticleSystem skidmark_particles[4];
+
     f32 exhaust_spawn_prob;
     f32 drift_spawn_prob;
 
