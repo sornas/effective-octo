@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 
     char str[100] = {};
     for (u32 i = 0; i < NUM_CAR_SPRITES; i++) {
-        sprintf(str, "CAR%d", i);
+        sprintf(str, "CAR_RED%d", i);
         CAR_SPRITES[i] = fog_asset_fetch_id(str);
     }
 
