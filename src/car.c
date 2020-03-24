@@ -122,7 +122,8 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.22,  0.15), car->body.rotation));
         fog_renderer_particle_spawn(&car->drift_particles, 1);
 
-        f32 rotation = snap_rotation(car->body.rotation, NUM_CAR_SPRITES);
+        //f32 rotation = snap_rotation(car->body.rotation, NUM_CAR_SPRITES);
+        f32 rotation = car->body.rotation;
         // front left
         car->skidmark_particles[0].position =
             fog_add_v2(car->body.position,
