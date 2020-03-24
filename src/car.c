@@ -62,9 +62,9 @@ f32 snap_rotation(f32 angle, u32 steps) {
     return angle_to_steps(angle, steps) * spacing;
 }
 
-AssetID fetch_car_sprite(f32 angle) {
+AssetID fetch_car_sprite(AssetID *sprites, f32 angle) {
     s32 index = angle_to_steps(angle, NUM_CAR_SPRITES);
-    return CAR_SPRITES[mod_s32(index + NUM_CAR_SPRITES / 2, NUM_CAR_SPRITES)];
+    return sprites[mod_s32(index + NUM_CAR_SPRITES / 2, NUM_CAR_SPRITES)];
 }
 
 
@@ -225,7 +225,7 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
 
 void draw_car(Car *car) {
     fog_physics_debug_draw_body(&car->body);
-    AssetID sprite = fetch_car_sprite(car->body.rotation);
+    AssetID sprite = fetch_car_sprite(car->sprites, car->body.rotation);
     fog_renderer_push_sprite(2, sprite, car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
 
     for (u8 i = 0; i < 4; i++)

@@ -104,23 +104,25 @@ int main(int argc, char **argv) {
     fog_input_add(fog_key_to_input_code(SDLK_i), NAME(FORWARD), P2);
     fog_input_add(fog_key_to_input_code(SDLK_k), NAME(BACKWARD), P2);
 
-    char str[100] = {};
-    for (u32 i = 0; i < NUM_CAR_SPRITES; i++) {
-        sprintf(str, "CAR_RED%d", i);
-        CAR_SPRITES[i] = fog_asset_fetch_id(str);
-    }
-
-    for (u32 i = 0; i < NUM_PINE_SPRITES; i++) {
-        sprintf(str, "PINE%d", i);
-        PINE_SPRITES[i] = fog_asset_fetch_id(str);
-    }
-
     car_sprite = fog_asset_fetch_id("CAR_SPRITE");
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
     square = car_shape;
 
     car1 = create_car(P1);
     car2 = create_car(P2);
+
+    char str[100] = {};
+    for (u32 i = 0; i < NUM_CAR_SPRITES; i++) {
+        sprintf(str, "CAR_RED%d", i);
+        car1.sprites[i] = fog_asset_fetch_id(str);
+        sprintf(str, "CAR_BLUE%d", i);
+        car2.sprites[i] = fog_asset_fetch_id(str);
+    }
+
+    for (u32 i = 0; i < NUM_PINE_SPRITES; i++) {
+        sprintf(str, "PINE%d", i);
+        PINE_SPRITES[i] = fog_asset_fetch_id(str);
+    }
 
     fog_renderer_set_window_size(1200, 800);
     fog_renderer_turn_on_camera(0);

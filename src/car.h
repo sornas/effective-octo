@@ -4,9 +4,8 @@ ShapeID car_shape;
 AssetID car_sprite;
 
 #define NUM_CAR_SPRITES 16
-extern AssetID CAR_SPRITES[NUM_CAR_SPRITES];
 
-AssetID fetch_car_sprite(f32 angle);
+AssetID fetch_car_sprite(AssetID *sprites, f32 angle);
 
 typedef struct Car {
     Player player;
@@ -30,6 +29,8 @@ typedef struct Car {
 
     u32 next_checkpoint;
     u32 current_lap;
+
+    AssetID sprites[NUM_CAR_SPRITES];
 } Car;
 
 
