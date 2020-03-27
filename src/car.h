@@ -10,6 +10,7 @@ AssetID fetch_car_sprite(AssetID *sprites, f32 angle);
 typedef struct Car {
     Player player;
     Body body;
+    b8 controller;
 
     ParticleSystem exhaust_particles;
     ParticleSystem drift_particles;

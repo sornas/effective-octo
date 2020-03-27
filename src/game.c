@@ -110,7 +110,9 @@ int main(int argc, char **argv) {
     square = car_shape;
 
     car1 = create_car(P1);
+    car1.controller = 1;
     car2 = create_car(P2);
+    car2.controller = 0;
 
     char str[100] = {};
     for (u32 i = 0; i < NUM_CAR_SPRITES; i++) {
