@@ -57,6 +57,13 @@ void build_level() {
 }
 
 void update() {
+    static b8 settings = 0;
+    if (fog_util_begin_tweak_section("Settings", &settings)) {
+        fog_util_tweak_b8("Car 1 - controller", &car1.controller);
+        fog_util_tweak_b8("Car 2 - controller", &car2.controller);
+    }
+    fog_util_end_tweak_section(&settings);
+
     build_level();
     update_car(&car1, &lvl, fog_logic_delta());
     update_car(&car2, &lvl, fog_logic_delta());
