@@ -61,10 +61,11 @@ void update() {
     if (fog_util_begin_tweak_section("Settings", &settings)) {
         fog_util_tweak_b8("Car 1 - controller", &car1.controller);
         fog_util_tweak_b8("Car 2 - controller", &car2.controller);
+
+        build_level();
     }
     fog_util_end_tweak_section(&settings);
 
-    build_level();
     update_car(&car1, &lvl, fog_logic_delta());
     update_car(&car2, &lvl, fog_logic_delta());
 
@@ -129,6 +130,8 @@ int main(int argc, char **argv) {
     car1.controller = 1;
     car2 = create_car(P2);
     car2.controller = 0;
+
+    build_level();
 
     char str[100] = {};
     for (u32 i = 0; i < NUM_CAR_SPRITES; i++) {
