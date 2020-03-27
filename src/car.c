@@ -32,6 +32,11 @@ f32 clamp_f32(f32 min, f32 max, f32 v) {
 }
 
 static inline
+f32 lerp_f32(f32 a, f32 b, f32 l) {
+    return a * (1.0f - l) + (b * l);
+}
+
+static inline
 f32 sign_f32(f32 a) {
     if (a >= 0)
         return 1;
@@ -101,10 +106,10 @@ Car create_car(Player player) {
 }
 
 void update_car(Car *car, struct Level *lvl, f32 delta) {
-    if (car->controller)
-        car->wheel_turn = clamp_f32(-car->wheel_turn_max, car->wheel_turn_max,
-                car->wheel_turn + (car->wheel_turn_speed * delta * -fog_input_value(NAME(LEFTRIGHT), car->player)));
-    else {
+    if (car->controller) {
+        f32 wheel_target = car->wheel_turn_max * -fog_input_value(NAME(LEFTRIGHT), car->player);
+        car->wheel_turn = lerp_f32(car->wheel_turn, wheel_target, car->wheel_turn_speed * delta * 2.5);
+    } else {
         if (fog_input_down(NAME(LEFT), car->player)) {
             car->wheel_turn = min_f32(car->wheel_turn + (car->wheel_turn_speed * delta),
                                       car->wheel_turn_max);
