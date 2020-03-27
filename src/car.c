@@ -116,7 +116,7 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         } else if (fog_input_down(NAME(RIGHT), car->player)) {
             car->wheel_turn = max_f32(car->wheel_turn - (car->wheel_turn_speed * delta),
                                       -car->wheel_turn_max);
-        } else if (fog_input_using_controller()) {
+        } else {
             f32 max = car->wheel_turn_speed * delta;
             if (abs_f32(car->wheel_turn) < max)
                 car->wheel_turn = 0;
