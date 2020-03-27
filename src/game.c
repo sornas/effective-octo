@@ -94,15 +94,16 @@ int main(int argc, char **argv) {
 
     fog_init(argc, argv);
 
-    fog_input_add(fog_key_to_input_code(SDLK_a), NAME(LEFT), P1);
-    fog_input_add(fog_key_to_input_code(SDLK_d), NAME(RIGHT), P1);
-    fog_input_add(fog_key_to_input_code(SDLK_w), NAME(FORWARD), P1);
-    fog_input_add(fog_key_to_input_code(SDLK_s), NAME(BACKWARD), P1);
-    fog_input_add(fog_key_to_input_code(SDLK_SPACE), NAME(DRIFT), P1);
-    fog_input_add(fog_key_to_input_code(SDLK_j), NAME(LEFT), P2);
-    fog_input_add(fog_key_to_input_code(SDLK_l), NAME(RIGHT), P2);
-    fog_input_add(fog_key_to_input_code(SDLK_i), NAME(FORWARD), P2);
-    fog_input_add(fog_key_to_input_code(SDLK_k), NAME(BACKWARD), P2);
+    fog_input_add(fog_key_to_input_code(SDLK_a), NAME(LEFT), P2);
+    fog_input_add(fog_key_to_input_code(SDLK_d), NAME(RIGHT), P2);
+    fog_input_add(fog_key_to_input_code(SDLK_w), NAME(FORWARD), P2);
+    fog_input_add(fog_key_to_input_code(SDLK_s), NAME(BACKWARD), P2);
+    fog_input_add(fog_key_to_input_code(SDLK_SPACE), NAME(DRIFT), P2);
+
+    fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_LEFTX, 0), NAME(LEFTRIGHT), P1);
+    fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0), NAME(FORWARD_AXIS), P1);
+    fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_TRIGGERLEFT, 0), NAME(BACKWARD_AXIS), P1);
+    fog_input_add(fog_button_to_input_code(SDL_CONTROLLER_BUTTON_A, 0), NAME(DRIFT), P1);
 
     car_sprite = fog_asset_fetch_id("CAR_SPRITE");
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);

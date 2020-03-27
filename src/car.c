@@ -101,19 +101,23 @@ Car create_car(Player player) {
 }
 
 void update_car(Car *car, struct Level *lvl, f32 delta) {
+    car->wheel_turn = clamp_f32(-car->wheel_turn_max, car->wheel_turn_max,
+            car->wheel_turn + (car->wheel_turn_speed * delta * -fog_input_value(NAME(LEFTRIGHT), car->player)));
+    /*
     if (fog_input_down(NAME(LEFT), car->player)) {
         car->wheel_turn = min_f32(car->wheel_turn + (car->wheel_turn_speed * delta),
                                   car->wheel_turn_max);
     } else if (fog_input_down(NAME(RIGHT), car->player)) {
         car->wheel_turn = max_f32(car->wheel_turn - (car->wheel_turn_speed * delta),
                                   -car->wheel_turn_max);
-    } else {
+    } else if (fog_input_using_controller()) {
         f32 max = car->wheel_turn_speed * delta;
         if (abs_f32(car->wheel_turn) < max)
             car->wheel_turn = 0;
         else
             car->wheel_turn -= sign_f32(car->wheel_turn) * max;
     }
+    */
 
     if (fog_input_down(NAME(DRIFT), car->player)) {
         car->drift_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/6, car->body.rotation + PI + PI/6 };
@@ -150,6 +154,11 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
     Vec2 forward = fog_V2(cos(car->body.rotation), sin(car->body.rotation));
     Vec2 acceleration = fog_V2(0, 0);
     f32 dacc = car->acceleration;
+    f32 forward_backward = fog_input_value(NAME(FORWARD_AXIS), car->player)
+                         - fog_input_value(NAME(BACKWARD_AXIS), car->player);
+    acceleration = fog_mul_v2(forward, dacc * forward_backward);
+    car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI, car->body.rotation + PI };
+    //fog_renderer_particle_spawn(&car->exhaust_particles, 1);  TODO(gu)
     if (fog_input_down(NAME(FORWARD), car->player)) {
         acceleration = fog_mul_v2(forward, dacc);
         car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI, car->body.rotation + PI };

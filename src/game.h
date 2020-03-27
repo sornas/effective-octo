@@ -4,8 +4,11 @@
 typedef enum {
     LEFT,
     RIGHT,
+    LEFTRIGHT,
     FORWARD,
     BACKWARD,
+    FORWARD_AXIS,
+    BACKWARD_AXIS,
     DRIFT,
     NUM_BINDINGS,
 } Binding;
