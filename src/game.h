@@ -10,6 +10,7 @@ typedef enum {
     FORWARD_AXIS,
     BACKWARD_AXIS,
     DRIFT,
+    PAUSE,
     NUM_BINDINGS,
 } Binding;
 Name bindings[NUM_BINDINGS];

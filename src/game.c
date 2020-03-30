@@ -16,6 +16,8 @@ LevelSketch lvl_sketch = {};
 LevelBlueprint lvl_bp = {};
 Level lvl = {};
 
+b8 paused = 0;
+
 ShapeID square;
 
 void build_level() {
@@ -58,26 +60,33 @@ void build_level() {
 
 void update() {
     static b8 settings = 0;
-    if (fog_util_begin_tweak_section("Settings", &settings)) {
-        fog_util_tweak_b8("Car 1 - controller", &car1.controller);
-        fog_util_tweak_b8("Car 2 - controller", &car2.controller);
 
-        build_level();
+    if (fog_input_pressed(NAME(PAUSE), P1) || fog_input_pressed(NAME(PAUSE), P2)) {
+        paused = !paused;
     }
-    fog_util_end_tweak_section(&settings);
 
-    update_car(&car1, &lvl, fog_logic_delta());
-    update_car(&car2, &lvl, fog_logic_delta());
+    if (paused) {
+        if (fog_util_begin_tweak_section("Settings", &settings)) {
+            fog_util_tweak_b8("Car 1 - controller", &car1.controller);
+            fog_util_tweak_b8("Car 2 - controller", &car2.controller);
 
-    //TODO(gu) these should ideally not be hard-coded
-    fog_renderer_fetch_camera(0)->position = fog_add_v2(
-            fog_mul_v2(fog_V2(10, 0), fog_renderer_fetch_camera(0)->zoom),
-            fog_add_v2(car1.body.position,
-                       fog_mul_v2(car1.body.velocity, 0.01)));
-    fog_renderer_fetch_camera(1)->position = fog_add_v2(
-            fog_mul_v2(fog_V2(-10, 0), fog_renderer_fetch_camera(1)->zoom),
-            fog_add_v2(car2.body.position,
-                       fog_mul_v2(car2.body.velocity, 0.01)));
+            build_level();
+        }
+        fog_util_end_tweak_section(&settings);
+    } else {
+        update_car(&car1, &lvl, fog_logic_delta());
+        update_car(&car2, &lvl, fog_logic_delta());
+
+        //TODO(gu) these should ideally not be hard-coded
+        fog_renderer_fetch_camera(0)->position = fog_add_v2(
+                fog_mul_v2(fog_V2(10, 0), fog_renderer_fetch_camera(0)->zoom),
+                fog_add_v2(car1.body.position,
+                           fog_mul_v2(car1.body.velocity, 0.01)));
+        fog_renderer_fetch_camera(1)->position = fog_add_v2(
+                fog_mul_v2(fog_V2(-10, 0), fog_renderer_fetch_camera(1)->zoom),
+                fog_add_v2(car2.body.position,
+                           fog_mul_v2(car2.body.velocity, 0.01)));
+    }
 }
 
 void draw() {
@@ -113,14 +122,18 @@ int main(int argc, char **argv) {
     fog_input_add(fog_key_to_input_code(SDLK_k), NAME(BACKWARD), P2);
     fog_input_add(fog_key_to_input_code(SDLK_RSHIFT), NAME(DRIFT), P2);
 
+    fog_input_add(fog_key_to_input_code(SDLK_ESCAPE), NAME(PAUSE), P1);
+
     fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_LEFTX, 0), NAME(LEFTRIGHT), P1);
     fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0), NAME(FORWARD_AXIS), P1);
     fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_TRIGGERLEFT, 0), NAME(BACKWARD_AXIS), P1);
     fog_input_add(fog_button_to_input_code(SDL_CONTROLLER_BUTTON_A, 0), NAME(DRIFT), P1);
+    fog_input_add(fog_button_to_input_code(SDL_CONTROLLER_BUTTON_START, 0), NAME(PAUSE), P1);
     fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_LEFTX, 1), NAME(LEFTRIGHT), P2);
     fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 1), NAME(FORWARD_AXIS), P2);
     fog_input_add(fog_axis_to_input_code(SDL_CONTROLLER_AXIS_TRIGGERLEFT, 1), NAME(BACKWARD_AXIS), P2);
     fog_input_add(fog_button_to_input_code(SDL_CONTROLLER_BUTTON_A, 1), NAME(DRIFT), P2);
+    fog_input_add(fog_button_to_input_code(SDL_CONTROLLER_BUTTON_START, 1), NAME(PAUSE), P2);
 
     car_sprite = fog_asset_fetch_id("CAR_SPRITE");
     car_shape = fog_physics_add_shape_from_sprite(car_sprite);
