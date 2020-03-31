@@ -2,6 +2,7 @@
 #include "level.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "particles.h"
 
@@ -94,6 +95,11 @@ Car create_car(Player player) {
 
         .next_checkpoint = 1, // So we don't go into the goal on the first lap.
         .current_lap = 0,
+        .checkpoint_timer = 0,
+        .prev_checkpoint_time = 0,
+        .checkpoint_records = NULL,
+
+        .time_report_prefix = (char *) malloc(TIME_REPORT_PREFIX_LENGTH * sizeof(char)),
     };
 
     for (u8 i = 0; i < 4; i++)
@@ -106,6 +112,8 @@ Car create_car(Player player) {
 }
 
 void update_car(Car *car, struct Level *lvl, f32 delta) {
+    car->checkpoint_timer += delta;
+
     if (car->controller) {
         f32 wheel_target = car->wheel_turn_max * -fog_input_value(NAME(LEFTRIGHT), car->player);
         car->wheel_turn = lerp_f32(car->wheel_turn, wheel_target, car->wheel_turn_speed * delta * 2.5);
@@ -203,8 +211,13 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         b8 passed = fog_dot_v2(norm, d) > 0;
         b8 forward = fog_dot_v2(car->body.velocity, d) > 0;
         if (passed && forward) {
+            car->prev_checkpoint_time = car->checkpoint_timer;
             if (car->next_checkpoint == 0) {
                 car->current_lap++;
+                passed_checkpoint(car, lvl->num_checkpoints);
+            } else {
+                // this is easier than working with negative mod
+                passed_checkpoint(car, car->next_checkpoint - 1);
             }
             car->next_checkpoint++;
             car->next_checkpoint %= lvl->num_checkpoints;
@@ -217,6 +230,12 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         fog_renderer_particle_update(&car->skidmark_particles[i], delta);
     fog_renderer_particle_update(&car->exhaust_particles, delta);
     fog_renderer_particle_update(&car->drift_particles, delta);
+
+    sprintf(car->time_report_prefix, "%d (%d)",
+            (car->player == P1 ? 1 : 2),
+            (car->next_checkpoint + lvl->num_checkpoints - (car->checkpoint_timer < 0.5 ? 2 : 1)) % lvl->num_checkpoints);
+
+    fog_util_tweak_f32_r(car->time_report_prefix, (car->checkpoint_timer < 0.5 ? car->prev_checkpoint_time : car->checkpoint_timer));
 
 #define car_debug_vec(v, o, c)                                                \
     fog_renderer_push_line(                                                   \
@@ -253,3 +272,10 @@ void draw_car(Car *car) {
     fog_renderer_particle_draw(&car->drift_particles);
 }
 
+void passed_checkpoint(Car *car, u32 checkpoint) {
+    if (car->checkpoint_records[checkpoint] < 0.1
+            || car->checkpoint_timer < car->checkpoint_records[checkpoint]) {
+        car->checkpoint_records[checkpoint] = car->checkpoint_timer;
+    }
+    car->checkpoint_timer = 0;
+}
