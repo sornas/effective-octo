@@ -99,7 +99,7 @@ Car create_car(Player player) {
         .prev_checkpoint_time = 0,
         .checkpoint_records = NULL,
 
-        .time_report_prefix = (char *) malloc(TIME_REPORT_PREFIX_LENGTH * sizeof(char)),
+        .time_report = {},
     };
 
     for (u8 i = 0; i < 4; i++)
@@ -231,11 +231,11 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
     fog_renderer_particle_update(&car->exhaust_particles, delta);
     fog_renderer_particle_update(&car->drift_particles, delta);
 
-    sprintf(car->time_report_prefix, "%d (%d)",
+    sprintf(car->time_report, " %d (%d): %.2f",
             (car->player == P1 ? 1 : 2),
-            (car->next_checkpoint + lvl->num_checkpoints - (car->checkpoint_timer < 0.5 ? 2 : 1)) % lvl->num_checkpoints);
-
-    fog_util_tweak_f32_r(car->time_report_prefix, (car->checkpoint_timer < 0.5 ? car->prev_checkpoint_time : car->checkpoint_timer));
+            (car->next_checkpoint + lvl->num_checkpoints - (car->checkpoint_timer < 0.5 ? 2 : 1)) % lvl->num_checkpoints,
+            (car->checkpoint_timer < 0.5 ? car->prev_checkpoint_time : car->checkpoint_timer));
+    fog_util_tweak_show(car->time_report);
 
 #define car_debug_vec(v, o, c)                                                \
     fog_renderer_push_line(                                                   \

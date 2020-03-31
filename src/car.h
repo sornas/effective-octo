@@ -4,7 +4,7 @@ ShapeID car_shape;
 AssetID car_sprite;
 
 #define NUM_CAR_SPRITES 16
-#define TIME_REPORT_PREFIX_LENGTH 16
+#define TIME_REPORT_LENGTH 16
 
 AssetID fetch_car_sprite(AssetID *sprites, f32 angle);
 
@@ -35,7 +35,7 @@ typedef struct Car {
     f32 prev_checkpoint_time;
     f32 *checkpoint_records;
 
-    char *time_report_prefix;
+    char time_report[TIME_REPORT_LENGTH];
 
     AssetID sprites[NUM_CAR_SPRITES];
 } Car;
