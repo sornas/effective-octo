@@ -105,7 +105,7 @@ Car create_car(Player player) {
     for (u8 i = 0; i < 4; i++)
         car.skidmark_particles[i] = create_skidmark_particles();
 
-    car.body.scale = fog_V2(0.5, 0.5);
+    car.body.scale = fog_V2(0.5, 0.3);
     car.body.damping = 0.5;
 
     return car;
@@ -268,7 +268,7 @@ void collision_car(Car *a, Car *b) {
 void draw_car(Car *car) {
     fog_physics_debug_draw_body(&car->body);
     AssetID sprite = fetch_car_sprite(car->sprites, car->body.rotation);
-    fog_renderer_push_sprite(2, sprite, car->body.position, fog_mul_v2(car->body.scale, 5), 0, fog_V4(1, 1, 1, 1));
+    fog_renderer_push_sprite(2, sprite, car->body.position, fog_mul_v2(fog_V2(1, 1), 3), 0, fog_V4(1, 1, 1, 1));
 
     for (u8 i = 0; i < 4; i++)
         fog_renderer_particle_draw(&car->skidmark_particles[i]);
