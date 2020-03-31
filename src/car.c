@@ -86,7 +86,6 @@ Car create_car(Player player) {
         .drift_spawn_prob = 0.8,
 
         .wheel_turn_max = PI / 4,
-        .wheel_turn_speed = 2,
         .wheel_turn = 0,
 
         .acceleration = 3,
@@ -116,27 +115,7 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
     const f32 DRIFT_SPEED = 0.85;
     car->checkpoint_timer += delta;
 
-    if (car->controller) {
-        f32 wheel_target = car->wheel_turn_max * -fog_input_value(NAME(LEFTRIGHT), car->player);
-        car->wheel_turn = lerp_f32(car->wheel_turn, wheel_target, car->wheel_turn_speed * delta * 2.5);
-    } else {
-        if (fog_input_down(NAME(LEFT), car->player)) {
-            car->wheel_turn = min_f32(car->wheel_turn + (car->wheel_turn_speed * delta),
-                                      car->wheel_turn_max);
-        } else if (fog_input_down(NAME(RIGHT), car->player)) {
-            car->wheel_turn = max_f32(car->wheel_turn - (car->wheel_turn_speed * delta),
-                                      -car->wheel_turn_max);
-        } else {
-            f32 max = car->wheel_turn_speed * delta;
-            if (abs_f32(car->wheel_turn) < max)
-                car->wheel_turn = 0;
-            else
-                car->wheel_turn -= sign_f32(car->wheel_turn) * max;
-        }
-    }
-
     Vec2 forward = fog_V2(cos(car->body.rotation), sin(car->body.rotation));
-
     bool drifting = false;
     if (abs_f32(fog_dot_v2(fog_rotate_ccw_v2(forward),
                    fog_normalize_v2(car->body.velocity))) > DRIFT_THRESH
@@ -170,6 +149,37 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
     }
 
 
+    f32 WHEEL_TURN_SPEED;
+    f32 MAX_ROTATION;
+    if (drifting) {
+        MAX_ROTATION = 1.0;
+        car->body.damping = 0.5;
+        WHEEL_TURN_SPEED = 0.8;
+    } else {
+        WHEEL_TURN_SPEED = 2.0,
+        MAX_ROTATION = 2.0;
+        car->body.damping = 0.4;
+    }
+
+    if (car->controller) {
+        f32 wheel_target = car->wheel_turn_max * -fog_input_value(NAME(LEFTRIGHT), car->player);
+        car->wheel_turn = lerp_f32(car->wheel_turn, wheel_target, WHEEL_TURN_SPEED * delta * 2.5);
+    } else {
+        if (fog_input_down(NAME(LEFT), car->player)) {
+            car->wheel_turn = min_f32(car->wheel_turn + (WHEEL_TURN_SPEED * delta),
+                                      car->wheel_turn_max);
+        } else if (fog_input_down(NAME(RIGHT), car->player)) {
+            car->wheel_turn = max_f32(car->wheel_turn - (WHEEL_TURN_SPEED * delta),
+                                      -car->wheel_turn_max);
+        } else {
+            f32 max = WHEEL_TURN_SPEED * delta;
+            if (abs_f32(car->wheel_turn) < max)
+                car->wheel_turn = 0;
+            else
+                car->wheel_turn -= sign_f32(car->wheel_turn) * max;
+        }
+    }
+
     Vec2 acceleration = fog_V2(0, 0);
     f32 dacc = car->acceleration;
     if (car->controller) {
@@ -198,14 +208,6 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         fog_renderer_particle_spawn(&car->exhaust_particles, 1);
 
 
-    f32 MAX_ROTATION;
-    if (drifting) {
-        MAX_ROTATION = 1.0;
-        car->body.damping = 0.5;
-    } else {
-        MAX_ROTATION = 2.0;
-        car->body.damping = 0.4;
-    }
     f32 rot_mag = min_f32(fog_dot_v2(forward, vel), MAX_ROTATION);
     vel = fog_sub_v2(vel, fog_mul_v2(forward, rot_mag));
     Vec2 new_forward = fog_V2(cos(rotation), sin(rotation));
