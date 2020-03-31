@@ -316,10 +316,7 @@ void level_place(Level *level, struct Car *car) {
     default:
         break;
     }
-    car->next_checkpoint = 1;
-    car->current_lap = 0;
-    car->checkpoint_timer = 0;
-    car->checkpoint_records = realloc(car->checkpoint_records, level->num_checkpoints * sizeof(f32));
+    reset_car(car, level->num_checkpoints);
 }
 
 void level_clear(Level *level) {

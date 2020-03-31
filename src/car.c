@@ -283,3 +283,11 @@ void passed_checkpoint(Car *car, u32 checkpoint) {
     }
     car->checkpoint_timer = 0;
 }
+
+void reset_car(Car *car, u32 num_checkpoints) {
+    car->next_checkpoint = 1;
+    car->current_lap = 0;
+    car->checkpoint_timer = 0;
+    car->checkpoint_records = realloc(car->checkpoint_records, num_checkpoints * sizeof(f32));
+    car->body.velocity = fog_V2(0, 0);
+}

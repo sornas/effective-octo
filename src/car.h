@@ -62,3 +62,6 @@ void draw_car(Car *car);
 //
 void passed_checkpoint(Car *car, u32 checkpoint);
 
+////
+//
+void reset_car(Car *car, u32 num_checkpoints);
