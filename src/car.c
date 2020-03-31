@@ -200,6 +200,10 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
     for (u32 i = 0; i < lvl->num_bodies; i++) {
         Body *body = lvl->bodies + i;
         Overlap overlap = fog_physics_check_overlap(&car->body, body);
+        if (overlap.is_valid) {
+            car->body.velocity = fog_mul_v2(car->body.velocity, pow(0.1, delta));
+        }
+
         fog_physics_solve(overlap);
     }
 
