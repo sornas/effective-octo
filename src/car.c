@@ -158,7 +158,7 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         car->skidmark_particles[3].position =
             fog_add_v2(car->body.position,
                     fog_rotate_v2(fog_V2(-0.25, 0.15), rotation));
-        
+
         for (u8 i = 0; i < 4; i++) {
             car->skidmark_particles[i].rotation = (Span) { rotation, rotation };
             fog_renderer_particle_spawn(&car->skidmark_particles[i], 1);
@@ -259,6 +259,10 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
     //car_debug_vec(back_fric, b, fog_V4(1, 1, 0, 1));
     //
     //world_debug_vec(car->exhaust_particles.position, fog_V2(0, 0), fog_V4(0, 0, 0, 1));
+}
+
+void collision_car(Car *a, Car *b) {
+    fog_physics_solve(fog_physics_check_overlap(&a->body, &b->body));
 }
 
 void draw_car(Car *car) {

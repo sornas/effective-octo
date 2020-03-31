@@ -51,6 +51,10 @@ struct Level;
 void update_car(Car *car, struct Level *lvl, f32 delta);
 
 ///
+// Check collisions between cars
+void collision_car(Car *a, Car *b);
+
+///
 // Draw the car.
 void draw_car(Car *car);
 
