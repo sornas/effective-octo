@@ -312,6 +312,7 @@ Level level_expand(LevelBlueprint *bp, ShapeID shape) {
 }
 
 void level_draw(Level *level) {
+#if 0
     for (u32 i = 0; i < level->num_bodies; i++) {
         fog_physics_debug_draw_body(level->bodies + i);
     }
@@ -322,6 +323,7 @@ void level_draw(Level *level) {
         fog_renderer_push_point(0, p, fog_V4(0, 1, 0, 1), 0.1);
         fog_renderer_push_line(0, p, fog_add_v2(p, d), fog_V4(0, 1, 0, 1), 0.1);
     }
+#endif
 
     for (u32 i = 0; i < level->num_trees; i++) {
         Vec2 scale = fog_V2(level->sizes[i], level->sizes[i]);

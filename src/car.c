@@ -254,21 +254,6 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         0.02)
 #define world_debug_vec(v, o, c)                                              \
     fog_renderer_push_line(1, o, fog_add_v2(o, v), c, 0.02)
-
-    //car_debug_vec(car_dir, fog_V2(0, 0), fog_V4(0, 1, 0, 1));
-    //car_debug_vec(fric_total, fog_V2(0, 0), fog_V4(1, 0, 0, 1));
-
-    //Vec2 f = fog_mul_v2(car_dir, car_length);
-    //car_debug_vec(front_normal, f, fog_V4(1, 0, 0, 1));
-    //car_debug_vec(fog_neg_v2(front_normal), f, fog_V4(1, 0, 0, 1));
-    //car_debug_vec(front_fric, f, fog_V4(1, 0, 1, 1));
-
-    //Vec2 b = fog_mul_v2(fog_neg_v2(car_dir), car_length);
-    //car_debug_vec(back_normal, b, fog_V4(1, 0, 0, 1));
-    //car_debug_vec(fog_neg_v2(back_normal), b, fog_V4(1, 0, 0, 1));
-    //car_debug_vec(back_fric, b, fog_V4(1, 1, 0, 1));
-    //
-    //world_debug_vec(car->exhaust_particles.position, fog_V2(0, 0), fog_V4(0, 0, 0, 1));
 }
 
 void collision_car(Car *a, Car *b) {
@@ -276,7 +261,6 @@ void collision_car(Car *a, Car *b) {
 }
 
 void draw_car(Car *car) {
-    fog_physics_debug_draw_body(&car->body);
     AssetID sprite = fetch_car_sprite(car->sprites, car->body.rotation);
     fog_renderer_push_sprite(2, sprite, car->body.position, fog_mul_v2(fog_V2(1, 1), 3), 0, fog_V4(1, 1, 1, 1));
 
