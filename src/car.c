@@ -112,6 +112,8 @@ Car create_car(Player player) {
 }
 
 void update_car(Car *car, struct Level *lvl, f32 delta) {
+    const f32 DRIFT_THRESH = 0.35;
+    const f32 DRIFT_SPEED = 0.85;
     car->checkpoint_timer += delta;
 
     if (car->controller) {
@@ -133,7 +135,13 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         }
     }
 
-    if (fog_input_down(NAME(DRIFT), car->player)) {
+    Vec2 forward = fog_V2(cos(car->body.rotation), sin(car->body.rotation));
+
+    bool drifting = false;
+    if (abs_f32(fog_dot_v2(fog_rotate_ccw_v2(forward),
+                   fog_normalize_v2(car->body.velocity))) > DRIFT_THRESH
+        && fog_length_v2(car->body.velocity) > DRIFT_SPEED) {
+        drifting = true;
         car->drift_particles.velocity_dir = (Span) { car->body.rotation + PI - PI/6, car->body.rotation + PI + PI/6 };
         car->drift_particles.position = fog_add_v2(car->body.position, fog_rotate_v2(fog_V2(-0.22, -0.15), car->body.rotation));
         fog_renderer_particle_spawn(&car->drift_particles, 1);
@@ -143,21 +151,17 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         //f32 rotation = snap_rotation(car->body.rotation, NUM_CAR_SPRITES);
         f32 rotation = car->body.rotation;
         // front left
-        car->skidmark_particles[0].position =
-            fog_add_v2(car->body.position,
-                    fog_rotate_v2(fog_V2(0.25, 0.15), rotation));
+        car->skidmark_particles[0].position = fog_add_v2(
+            car->body.position, fog_rotate_v2(fog_V2(0.25, 0.15), rotation));
         // front right
-        car->skidmark_particles[1].position =
-            fog_add_v2(car->body.position,
-                    fog_rotate_v2(fog_V2(0.25, -0.15), rotation));
+        car->skidmark_particles[1].position = fog_add_v2(
+            car->body.position, fog_rotate_v2(fog_V2(0.25, -0.15), rotation));
         // back right
-        car->skidmark_particles[2].position =
-            fog_add_v2(car->body.position,
-                    fog_rotate_v2(fog_V2(-0.25, -0.15), rotation));
+        car->skidmark_particles[2].position = fog_add_v2(
+            car->body.position, fog_rotate_v2(fog_V2(-0.25, -0.15), rotation));
         // back left
-        car->skidmark_particles[3].position =
-            fog_add_v2(car->body.position,
-                    fog_rotate_v2(fog_V2(-0.25, 0.15), rotation));
+        car->skidmark_particles[3].position = fog_add_v2(
+            car->body.position, fog_rotate_v2(fog_V2(-0.25, 0.15), rotation));
 
         for (u8 i = 0; i < 4; i++) {
             car->skidmark_particles[i].rotation = (Span) { rotation, rotation };
@@ -165,7 +169,7 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         }
     }
 
-    Vec2 forward = fog_V2(cos(car->body.rotation), sin(car->body.rotation));
+
     Vec2 acceleration = fog_V2(0, 0);
     f32 dacc = car->acceleration;
     if (car->controller) {
@@ -193,7 +197,15 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
     if (fog_random_real(0, 1) < car->exhaust_spawn_prob)
         fog_renderer_particle_spawn(&car->exhaust_particles, 1);
 
-    const f32 MAX_ROTATION = 2.0;
+
+    f32 MAX_ROTATION;
+    if (drifting) {
+        MAX_ROTATION = 1.0;
+        car->body.damping = 0.5;
+    } else {
+        MAX_ROTATION = 2.0;
+        car->body.damping = 0.4;
+    }
     f32 rot_mag = min_f32(fog_dot_v2(forward, vel), MAX_ROTATION);
     vel = fog_sub_v2(vel, fog_mul_v2(forward, rot_mag));
     Vec2 new_forward = fog_V2(cos(rotation), sin(rotation));
@@ -254,6 +266,8 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         0.02)
 #define world_debug_vec(v, o, c)                                              \
     fog_renderer_push_line(1, o, fog_add_v2(o, v), c, 0.02)
+
+
 }
 
 void collision_car(Car *a, Car *b) {
