@@ -76,6 +76,7 @@ void update() {
     } else {
         update_car(&car1, &lvl, fog_logic_delta());
         update_car(&car2, &lvl, fog_logic_delta());
+        collision_car(&car1, &car2);
 
         //TODO(gu) these should ideally not be hard-coded
         fog_renderer_fetch_camera(0)->position = fog_add_v2(
@@ -89,9 +90,6 @@ void update() {
     }
     fog_util_end_tweak_section(&settings);
 
-    update_car(&car1, &lvl, fog_logic_delta());
-    update_car(&car2, &lvl, fog_logic_delta());
-    collision_car(&car1, &car2);
 
     //TODO(gu) these should ideally not be hard-coded
     fog_renderer_fetch_camera(0)->position = fog_add_v2(
