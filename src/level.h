@@ -33,6 +33,10 @@ typedef struct Level {
     u32 num_bodies;
     Body *bodies;
 
+    u32 num_trees;
+    Vec2 *trees;
+    f32 *sizes;
+
     f32 width;
 } Level;
 

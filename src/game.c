@@ -24,9 +24,9 @@ void build_level() {
     static f32 noise = 2.0;
     static f32 offset = 0.2;
     static f32 smoothness = 8.0;
-    static f32 width = 1.4;
-    static f32 spacing = 0.3;
-    static f32 border_width = 0.5;
+    static f32 width = 2.4;
+    static f32 spacing = 0.1;
+    static f32 border_width = 2.3;
     static bool change = true;
 
     static b8 track_parameters = 0;
@@ -41,7 +41,8 @@ void build_level() {
         change |= fog_util_tweak_f32("Border Width", &border_width, 0.1);
 
         b8 gen_new_track = false;
-        if (change |= fog_util_tweak_b8("Gen new", &gen_new_track)) {
+        change |= fog_util_tweak_b8("Gen new", &gen_new_track);
+        if (gen_new_track) {
             noise = fog_random_real(0.2, 5.0);
             offset = fog_random_real(-5.0, 5.0);
         }

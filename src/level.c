@@ -5,6 +5,7 @@
 #include "level.h"
 #include "car.h"
 #include "math.h"
+#include "game.h"
 
 #define PI 3.1415
 
@@ -13,10 +14,10 @@ static Vec2 from_polar(f32 angle, f32 distance) {
 }
 
 // Swapping between generator functions
-#if 0
+#if 1
 // These are kinda funky, and cool
 static f32 distance_func(f32 t, f32 noise) {
-    return sin(noise * t) + sin(noise * 0.5 * t) + 5.0;
+    return sin(noise * t) + sin(noise * 0.5 * t) + 10.0;
 }
 
 static f32 angle_func(f32 t) {
@@ -268,6 +269,7 @@ Level level_expand(LevelBlueprint *bp, ShapeID shape) {
         bodies[num_bodies++] = body;
     }
 
+    const u32 num_trees = 4000;
     Level level = {
         .num_checkpoints = bp->num_checkpoints,
         .checkpoints = malloc(bp->num_checkpoints * sizeof(Body)),
@@ -276,12 +278,34 @@ Level level_expand(LevelBlueprint *bp, ShapeID shape) {
         .num_bodies = num_bodies,
         .bodies = bodies,
 
+        .num_trees = num_trees,
+        .trees = malloc(num_trees * sizeof(Vec2)),
+        .sizes = malloc(num_trees * sizeof(f32)),
+
         .width = bp->width,
     };
 
     for (u32 i = 0; i < bp->num_checkpoints; i++) {
         level.checkpoints[i] = bp->checkpoints[i];
         level.checkpoints_dir[i] = bp->checkpoints_dir[i];
+    }
+
+    for (u32 i = 0; i < level.num_trees / 2; i++) {
+        Vec2 start;
+        Vec2 end;
+
+        start = bp->right_edges[(i + 0) % bp->num_right_edges];
+        end = bp->right_edges[(i + 1) % bp->num_right_edges];
+#define LERP_VEC(a, b, l) fog_add_v2(fog_add_v2(fog_mul_v2(a, 1.0 - l), fog_mul_v2(b, l)), fog_random_unit_vec2())
+        f32 l = fog_random_real(0, 1);
+        level.trees[i * 2 + 0] = LERP_VEC(start, end, l);
+        level.sizes[i * 2 + 0] = fog_random_real(2.0, 3.0);
+
+        l = fog_random_real(0, 1);
+        start = bp->left_edges[(i + 0) % bp->num_left_edges];
+        end = bp->left_edges[(i + 1) % bp->num_left_edges];
+        level.trees[i * 2 + 1] = LERP_VEC(start, end, l);
+        level.sizes[i * 2 + 1] = fog_random_real(2.0, 3.0);
     }
 
     return level;
@@ -297,6 +321,11 @@ void level_draw(Level *level) {
         Vec2 d = level->checkpoints_dir[i];
         fog_renderer_push_point(0, p, fog_V4(0, 1, 0, 1), 0.1);
         fog_renderer_push_line(0, p, fog_add_v2(p, d), fog_V4(0, 1, 0, 1), 0.1);
+    }
+
+    for (u32 i = 0; i < level->num_trees; i++) {
+        Vec2 scale = fog_V2(level->sizes[i], level->sizes[i]);
+        fog_renderer_push_sprite(3, PINE_SPRITES[i % NUM_PINE_SPRITES], level->trees[i], scale, 0, fog_V4(1, 1, 1, 1));
     }
 }
 
@@ -320,8 +349,12 @@ void level_place(Level *level, struct Car *car) {
 }
 
 void level_clear(Level *level) {
-    if (level->bodies)
+    if (level->bodies) {
         free(level->bodies);
+        free(level->checkpoints);
+        free(level->checkpoints_dir);
+        free(level->trees);
+    }
 }
 
 Level level_gen(f32 noise, f32 offset, f32 smoothness, f32 width, f32 spacing, f32 border_width, ShapeID shape) {

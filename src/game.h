@@ -1,6 +1,5 @@
 #pragma once
 
-
 typedef enum {
     LEFT,
     RIGHT,
