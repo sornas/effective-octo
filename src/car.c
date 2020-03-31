@@ -165,8 +165,6 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         }
     }
 
-    car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI, car->body.rotation + PI };
-
     Vec2 forward = fog_V2(cos(car->body.rotation), sin(car->body.rotation));
     Vec2 acceleration = fog_V2(0, 0);
     f32 dacc = car->acceleration;
@@ -174,18 +172,26 @@ void update_car(Car *car, struct Level *lvl, f32 delta) {
         f32 forward_backward = fog_input_value(NAME(FORWARD_AXIS), car->player)
                              - fog_input_value(NAME(BACKWARD_AXIS), car->player);
         acceleration = fog_mul_v2(forward, dacc * forward_backward);
+        car->exhaust_spawn_prob = lerp_f32(0.2, 0.6, fog_input_value(NAME(FORWARD_AXIS), car->player));
         //fog_renderer_particle_spawn(&car->exhaust_particles, 1);  TODO(gu)
     } else {
         if (fog_input_down(NAME(FORWARD), car->player)) {
             acceleration = fog_mul_v2(forward, dacc);
-            fog_renderer_particle_spawn(&car->exhaust_particles, 1);
+            car->exhaust_spawn_prob = 0.6;
         } else if (fog_input_down(NAME(BACKWARD), car->player)) {
             acceleration = fog_mul_v2(forward, -dacc);
+            car->exhaust_spawn_prob = 0.2;
+        } else {
+            car->exhaust_spawn_prob = 0.2;
         }
     }
     Vec2 vel = fog_add_v2(car->body.velocity, fog_mul_v2(acceleration, delta));
     f32 turn = car->wheel_turn * delta * fog_dot_v2(forward, vel);
     f32 rotation = car->body.rotation + turn;
+
+    car->exhaust_particles.velocity_dir = (Span) { car->body.rotation + PI - 0.4, car->body.rotation + PI + 0.4 };
+    if (fog_random_real(0, 1) < car->exhaust_spawn_prob)
+        fog_renderer_particle_spawn(&car->exhaust_particles, 1);
 
     const f32 MAX_ROTATION = 2.0;
     f32 rot_mag = min_f32(fog_dot_v2(forward, vel), MAX_ROTATION);

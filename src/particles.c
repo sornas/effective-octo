@@ -12,12 +12,12 @@ ParticleSystem create_exhaust_particles() {
     exhaust_particles.position_y = (Span) { 0, 0 };
     exhaust_particles.velocity = (Span) { 0.5, 0.5 };
     exhaust_particles.acceleration = (Span) { 0, 0 };
-    exhaust_particles.spawn_size = (Span) { 0, 0 };
+    exhaust_particles.spawn_size = (Span) { 0.05, 0.075 };
     exhaust_particles.spawn_red = (Span) { 0, 0 };
     exhaust_particles.spawn_green = (Span) { 0, 0 };
     exhaust_particles.spawn_blue = (Span) { 0, 0 };
-    exhaust_particles.spawn_alpha = (Span) { 0.8, 1 };
-    exhaust_particles.die_size = (Span) { 0.2, 0.5 };
+    exhaust_particles.spawn_alpha = (Span) { 0.4, 0.6 };
+    exhaust_particles.die_size = (Span) { 0.1, 0.2 };
     exhaust_particles.die_alpha = (Span) { 0, 0 };
     return exhaust_particles;
 }
